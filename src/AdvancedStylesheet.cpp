@@ -18,6 +18,9 @@
 #include <QDebug>
 #include <QDir>
 #include <QRegularExpression>
+#include <QFontDatabase>
+
+#include "ResourceGenerator.h"
 
 namespace acss
 {
@@ -52,6 +55,16 @@ struct AdvancedStylesheetPrivate
 	 * range from 0 (transparent) to 1 (opaque)
 	 */
 	QString rgbaColor(const QString& RgbColor, float Opacity);
+
+	/**
+	 *	Replace the stylesheet variables in the given template
+	 */
+	void replaceStylesheetVariables(QString& Template);
+
+	/**
+	 * Register the style fonts to the font database
+	 */
+	void addFonts(QDir* Dir = nullptr);
 };
 // struct AdvancedStylesheetPrivate
 
@@ -75,11 +88,45 @@ QString AdvancedStylesheetPrivate::rgbaColor(const QString& RgbColor, float Opac
 
 
 //============================================================================
-bool AdvancedStylesheetPrivate::generateStylesheet()
+void AdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 {
 	static const int OpacityStrSize = QString("opacity(").size();
 
+	QRegularExpression re("\\{\\{.*\\}\\}");
+	QRegularExpressionMatch match;
+	int index = 0;
+	while ((index = Content.indexOf(re, index, &match)) != -1)
+	{
+		QString ValueString;
+		QString MatchString = match.captured();
+		// Use only the value inside of the brackets {{ }} without the brackets
+		auto TemplateVariable = MatchString.midRef(2, MatchString.size() - 4);
+		bool HasOpacity = TemplateVariable.endsWith(')');
 
+		if (HasOpacity)
+		{
+			auto Values = TemplateVariable.split("|");
+			ValueString = _this->themeVariable(Values[0].toString());
+			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
+			bool Ok;
+			auto Opacity = OpacityStr.toFloat(&Ok);
+			std::cout << "Opacity " << Opacity << std::endl;
+			ValueString = rgbaColor(ValueString, Opacity);
+		}
+		else
+		{
+			ValueString = _this->themeVariable(TemplateVariable.toString());
+		}
+
+		Content.replace(index, MatchString.size(), ValueString);
+		index += ValueString.size();
+	}
+}
+
+
+//============================================================================
+bool AdvancedStylesheetPrivate::generateStylesheet()
+{
 	QDir Dir(StylesheetFolder);
 	auto TemplateFiles = Dir.entryInfoList({"*.template"}, QDir::Files);
 	if (TemplateFiles.count() < 1)
@@ -94,46 +141,43 @@ bool AdvancedStylesheetPrivate::generateStylesheet()
 		return false;
 	}
 
-	QFile Template(TemplateFiles[0].absoluteFilePath());
-	Template.open(QIODevice::ReadOnly);
-	QString Content(Template.readAll());
+	QFile TemplateFile(TemplateFiles[0].absoluteFilePath());
+	TemplateFile.open(QIODevice::ReadOnly);
+	QString Content(TemplateFile.readAll());
+	replaceStylesheetVariables(Content);
 	std::cout << Content.toStdString() << std::endl;
-
-	QRegularExpression re("\\{\\{.*\\}\\}");
-	QRegularExpressionMatch match;
-	int index = 0;
-	while ((index = Content.indexOf(re, index, &match)) != -1)
-	{
-		QString ValueString;
-		QString MatchString = match.captured();
-		// Use only the value inside of the brackets {{ }} without the brackets
-		auto Value = MatchString.midRef(2, MatchString.size() - 4);
-		bool HasOpacity = Value.endsWith(')');
-
-		if (HasOpacity)
-		{
-			auto Values = Value.split("|");
-			ValueString = _this->themeVariable(Values[0].toString());
-			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
-			bool Ok;
-			auto Opacity = OpacityStr.toFloat(&Ok);
-			std::cout << "Opacity " << Opacity << std::endl;
-			ValueString = rgbaColor(ValueString, Opacity);
-		}
-		else
-		{
-			ValueString = _this->themeVariable(Value.toString());
-		}
-
-		std::cout << index << "  " << Value.toString().toStdString()
-			<< " " << HasOpacity << " " << ValueString.toStdString() << std::endl;
-
-		Content.replace(index, MatchString.size(), ValueString);
-		index += ValueString.size();
-	}
-
-	std::cout << Content.toStdString() << std::endl;
+	Stylesheet = Content;
 	return true;
+}
+
+
+//============================================================================
+void AdvancedStylesheetPrivate::addFonts(QDir* Dir)
+{
+	if (!Dir)
+	{
+		QDir FontsDir(_this->fontsFolder());
+		addFonts(&FontsDir);
+	}
+	else
+	{
+		std::cout << "Folder " << Dir->absolutePath().toStdString() << std::endl;
+		auto Folders = Dir->entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+		for (auto Folder : Folders)
+		{
+			Dir->cd(Folder);
+			addFonts(Dir);
+			Dir->cdUp();
+		}
+
+		auto FontFiles = Dir->entryList({"*.ttf"}, QDir::Files);
+		for (auto Font : FontFiles)
+		{
+            QString FontFilename = Dir->absoluteFilePath(Font);
+            std::cout << "Font " << FontFilename.toStdString() << std::endl;
+			QFontDatabase::addApplicationFont(FontFilename);
+		}
+	}
 }
 
 
@@ -212,6 +256,13 @@ QString CAdvancedStylesheet::themesFolder() const
 
 
 //============================================================================
+QString CAdvancedStylesheet::fontsFolder() const
+{
+	return d->StylesheetFolder + "/fonts";
+}
+
+
+//============================================================================
 QVector<QStringPair> CAdvancedStylesheet::resourceColorReplaceList(eResourceState State) const
 {
 	QVector<QStringPair> Result;
@@ -255,9 +306,25 @@ QString CAdvancedStylesheet::themeVariable(const QString& VariableId) const
 //============================================================================
 bool CAdvancedStylesheet::setTheme(const QString& Theme)
 {
+	d->addFonts();
 	auto Result = d->parseThemeFile(Theme);
-	d->generateStylesheet();
+	if (!d->generateStylesheet())
+	{
+		return false;
+	}
+
+	CResourceGenerator ResourceGenerator(this);
+	ResourceGenerator.generate();
+
+	QDir::addSearchPath("icon", d->OutputDir);
 	return Result;
+}
+
+
+//============================================================================
+QString CAdvancedStylesheet::styleSheet() const
+{
+	return d->Stylesheet;
 }
 } // namespace acss
 

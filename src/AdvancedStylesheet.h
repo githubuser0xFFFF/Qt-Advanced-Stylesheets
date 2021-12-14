@@ -56,6 +56,11 @@ public:
 	QString themesFolder() const;
 
 	/**
+	 * Returns the fonts folder for the theme fonts
+	 */
+	QString fontsFolder() const;
+
+	/**
 	 * Returns a vector with a list of colors that need to get replaced in
 	 * the resource template files
 	 */
@@ -83,6 +88,11 @@ public:
 	 * Returns true on success and false on error
 	 */
 	bool setTheme(const QString& Theme);
+
+	/**
+	 * Returns the processed theme stylesheet
+	 */
+	QString styleSheet() const;
 }; // class AdvancedStylesheet
 }
  // namespace namespace_name

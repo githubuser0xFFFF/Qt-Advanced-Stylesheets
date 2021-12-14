@@ -48,8 +48,8 @@ struct ResourceGeneratorPrivate
 void ResourceGeneratorPrivate::replaceColor(QByteArray& Content,
 	const QString& TemplateColor, const QString& ThemeColor) const
 {
-	std::cout << "replaceColor: " << TemplateColor.toStdString()
-		<< " with " << ThemeColor.toStdString() << std::endl;
+	//std::cout << "replaceColor: " << TemplateColor.toStdString()
+	//	<< " with " << ThemeColor.toStdString() << std::endl;
 	Content.replace(TemplateColor.toLatin1(), ThemeColor.toLatin1());
 }
 
@@ -63,7 +63,7 @@ void ResourceGeneratorPrivate::generate(const QString& SubDir,
 	QDir().mkpath(OutputDir);
 	for (const auto& Entry : Entries)
 	{
-		std::cout << "File: " << Entry.absoluteFilePath().toStdString() << std::endl;
+		//std::cout << "File: " << Entry.absoluteFilePath().toStdString() << std::endl;
 		QFile SvgFile(Entry.absoluteFilePath());
 		SvgFile.open(QIODevice::ReadOnly);
 		auto Content = SvgFile.readAll();
@@ -76,7 +76,7 @@ void ResourceGeneratorPrivate::generate(const QString& SubDir,
 		}
 
 		QString OutputFilename = OutputDir + "/" + Entry.fileName();
-		std::cout << "OutputFilename: " << OutputFilename.toStdString() << std::endl;
+		//std::cout << "OutputFilename: " << OutputFilename.toStdString() << std::endl;
 		QFile OutputFile(OutputFilename);
 		OutputFile.open(QIODevice::WriteOnly);
 		OutputFile.write(Content);
