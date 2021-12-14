@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include "AdvancedStylesheet.h"
-#include "ResourceGenerator.h"
 
 using namespace acss;
 
@@ -17,9 +16,6 @@ int main(int argc, char *argv[])
     std::cout << StylesheetDir.absolutePath().toStdString() << std::endl;
     CAdvancedStylesheet Stylesheet(StylesheetDir.absolutePath());
     Stylesheet.setOutputDirPath(a.applicationDirPath() + "/output");
-
-    //CResourceGenerator ResourceGenerator(&Stylesheet);
-    //ResourceGenerator.generate();
 
     Stylesheet.setTheme("dark_cyan.xml");
 }
