@@ -32,6 +32,7 @@ struct AdvancedStylesheetPrivate
 	CAdvancedStylesheet *_this;
 	QString StylesheetFolder;
 	QString OutputDir;
+	QMap<QString, QString> StyleVariables;
 	QMap<QString, QString> ThemeVariables;
 	QString Stylesheet;
 
@@ -46,9 +47,25 @@ struct AdvancedStylesheetPrivate
 	bool generateStylesheet();
 
 	/**
+	 * Export the internal generated stylesheet
+	 */
+	void exportStylesheet(const QString& Filename);
+
+	/**
+	 * Parse a list of theme variables
+	 */
+	bool parseThemeVariables(QXmlStreamReader& s, const QString& VariableTagName,
+		QMap<QString, QString>& Variable);
+
+	/**
 	 * Parse the theme file for
 	 */
 	bool parseThemeFile(const QString& ThemeFilename);
+
+	/**
+	 * Parse the style XML file
+	 */
+	bool parseStyleXmlFile();
 
 	/**
 	 * Creates an Rgba color from a given color and an opacity value in the
@@ -110,7 +127,6 @@ void AdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
 			bool Ok;
 			auto Opacity = OpacityStr.toFloat(&Ok);
-			std::cout << "Opacity " << Opacity << std::endl;
 			ValueString = rgbaColor(ValueString, Opacity);
 		}
 		else
@@ -145,9 +161,22 @@ bool AdvancedStylesheetPrivate::generateStylesheet()
 	TemplateFile.open(QIODevice::ReadOnly);
 	QString Content(TemplateFile.readAll());
 	replaceStylesheetVariables(Content);
-	std::cout << Content.toStdString() << std::endl;
+	//std::cout << Content.toStdString() << std::endl;
 	Stylesheet = Content;
+	exportStylesheet(TemplateFiles[0].baseName() + ".css");
 	return true;
+}
+
+
+//============================================================================
+void AdvancedStylesheetPrivate::exportStylesheet(const QString& Filename)
+{
+	QDir().mkpath(OutputDir);
+	QString OutputFilename = OutputDir + "/" + Filename;
+	QFile OutputFile(OutputFilename);
+	OutputFile.open(QIODevice::WriteOnly);
+	OutputFile.write(Stylesheet.toUtf8());
+	OutputFile.close();
 }
 
 
@@ -161,7 +190,6 @@ void AdvancedStylesheetPrivate::addFonts(QDir* Dir)
 	}
 	else
 	{
-		std::cout << "Folder " << Dir->absolutePath().toStdString() << std::endl;
 		auto Folders = Dir->entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 		for (auto Folder : Folders)
 		{
@@ -174,10 +202,41 @@ void AdvancedStylesheetPrivate::addFonts(QDir* Dir)
 		for (auto Font : FontFiles)
 		{
             QString FontFilename = Dir->absoluteFilePath(Font);
-            std::cout << "Font " << FontFilename.toStdString() << std::endl;
 			QFontDatabase::addApplicationFont(FontFilename);
 		}
 	}
+}
+
+
+//============================================================================
+bool AdvancedStylesheetPrivate::parseThemeVariables(
+	QXmlStreamReader& s, const QString& TagName, QMap<QString, QString>& Variables)
+{
+	while (s.readNextStartElement())
+	{
+		if (s.name() != TagName)
+		{
+			qDebug() << "Malformed theme file - expected tag <" << TagName << "> instead of " << s.name();
+			return false;
+		}
+		auto Name = s.attributes().value("name");
+		if (Name.isEmpty())
+		{
+			qDebug() << "Malformed theme file - name attribute missing in <" << TagName << "> tag";
+			return false;
+		}
+
+		auto Value = s.readElementText(QXmlStreamReader::SkipChildElements);
+		if (Value.isEmpty())
+		{
+			qDebug() << "Malformed theme file - text of <" << TagName << "> tag is empty";
+			return false;
+		}
+
+		Variables.insert(Name.toString(), Value);
+	}
+
+	return true;
 }
 
 
@@ -188,7 +247,6 @@ bool AdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 	QFile ThemeFile(ThemeFileName);
 	ThemeFile.open(QIODevice::ReadOnly);
 	QXmlStreamReader s(&ThemeFile);
-	QMap<QString, QString> NamedColors;
 	s.readNextStartElement();
 	if (s.name() != "resources")
 	{
@@ -196,33 +254,63 @@ bool AdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 		return false;
 	}
 
-	while (s.readNextStartElement())
-	{
-		if (s.name() != "color")
-		{
-			qDebug() << "Malformed theme file - expected tag <color> instead of " << s.name();
-			return false;
-		}
-		auto ColorName = s.attributes().value("name");
-		if (ColorName.isEmpty())
-		{
-			qDebug() << "Malformed theme file - name attribute missing in <color> tag";
-			return false;
-		}
-
-		auto ColorValue = s.readElementText(QXmlStreamReader::SkipChildElements);
-		if (ColorValue.isEmpty())
-		{
-			qDebug() << "Malformed theme file - text of <color> tag is empty";
-			return false;
-		}
-
-		NamedColors.insert(ColorName.toString(), ColorValue);
-	}
-
-	this->ThemeVariables = NamedColors;
+    auto Variables = StyleVariables;
+	parseThemeVariables(s, "color", Variables);
+	this->ThemeVariables = Variables;
 	return true;
 }
+
+
+//============================================================================
+bool AdvancedStylesheetPrivate::parseStyleXmlFile()
+{
+	QDir Dir(StylesheetFolder);
+	auto TemplateFiles = Dir.entryInfoList({"*.xml"}, QDir::Files);
+	if (TemplateFiles.count() < 1)
+	{
+		qDebug() << "Stylesheet folder does not contain a theme xml file";
+		return false;
+	}
+
+	if (TemplateFiles.count() > 1)
+	{
+		qDebug() << "Stylesheet folder contains multiple theme xml files";
+		return false;
+	}
+
+	QFile ThemeXmlFile(TemplateFiles[0].absoluteFilePath());
+	ThemeXmlFile.open(QIODevice::ReadOnly);
+	QXmlStreamReader s(&ThemeXmlFile);
+	s.readNextStartElement();
+	if (s.name() != "style")
+	{
+		qDebug() << "Malformed style file - expected tag <style> instead of " << s.name();
+		return false;
+	}
+
+	s.readNextStartElement();
+	if (s.name() != "variables")
+	{
+		qDebug() << "Malformed style file - expected tag <variables> instead of " << s.name();
+		return false;
+	}
+
+
+	QMap<QString, QString> Variables;
+	auto Result = parseThemeVariables(s, "variable", Variables);
+	if (Result)
+	{
+		StyleVariables = Variables;
+	}
+
+	for (auto Var : StyleVariables)
+	{
+		std::cout << Var.toStdString() << std::endl;
+	}
+
+	return true;
+}
+
 
 //============================================================================
 CAdvancedStylesheet::CAdvancedStylesheet(const QString& StylesheetFolder) :
@@ -304,15 +392,33 @@ QString CAdvancedStylesheet::themeVariable(const QString& VariableId) const
 
 
 //============================================================================
+void CAdvancedStylesheet::setThemeVariabe(const QString& VariableId, const QString& Value)
+{
+	d->ThemeVariables.insert(VariableId, Value);
+}
+
+
+//============================================================================
 bool CAdvancedStylesheet::setTheme(const QString& Theme)
 {
-	d->addFonts();
-	auto Result = d->parseThemeFile(Theme);
+	auto Result = d->parseStyleXmlFile();
+	if (!Result)
+	{
+		return false;
+	}
+
+	Result = d->parseThemeFile(Theme);
+	if (!Result)
+	{
+		return false;
+	}
+
 	if (!d->generateStylesheet())
 	{
 		return false;
 	}
 
+	d->addFonts();
 	CResourceGenerator ResourceGenerator(this);
 	ResourceGenerator.generate();
 

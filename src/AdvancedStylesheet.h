@@ -84,6 +84,11 @@ public:
 	QString themeVariable(const QString& VariableId) const;
 
 	/**
+	 * You can use this function to set or overwrite a theme variable
+	 */
+	void setThemeVariabe(const QString& VariableId, const QString& Value);
+
+	/**
 	 * Sets the theme to use.
 	 * Returns true on success and false on error
 	 */
