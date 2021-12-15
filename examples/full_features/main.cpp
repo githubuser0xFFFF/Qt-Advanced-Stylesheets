@@ -12,13 +12,17 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QDir StylesheetDir(a.applicationDirPath() + "/../../stylesheets/qt_material");
-    std::cout << StylesheetDir.absolutePath().toStdString() << std::endl;
-    CAdvancedStylesheet Stylesheet(StylesheetDir.absolutePath());
+    QDir StylesDir(a.applicationDirPath() + "/../../stylesheets");
+    std::cout << StylesDir.absolutePath().toStdString() << std::endl;
+
+    CAdvancedStylesheet Stylesheet;
+    Stylesheet.setStylesDir(StylesDir.absolutePath());
     Stylesheet.setOutputDirPath(a.applicationDirPath() + "/output");
+    Stylesheet.setCurrentStyle("qt_material");
     Stylesheet.setTheme("dark_cyan.xml");
 
     CMainWindow w;
+    w.setWindowIcon(Stylesheet.styleIcon());
     w.show();
 
     a.setStyleSheet(Stylesheet.styleSheet());

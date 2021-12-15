@@ -12,9 +12,10 @@ int main(int argc, char *argv[])
     std::cout << "Hello World!" << std::endl;
     std::cout << a.applicationDirPath().toStdString() << std::endl;
 
-    QDir StylesheetDir(a.applicationDirPath() + "/../../stylesheets/qt_material");
-    std::cout << StylesheetDir.absolutePath().toStdString() << std::endl;
-    CAdvancedStylesheet Stylesheet(StylesheetDir.absolutePath());
+    QDir StylesDir(a.applicationDirPath() + "/../../stylesheets");
+    std::cout << StylesDir.absolutePath().toStdString() << std::endl;
+    CAdvancedStylesheet Stylesheet;
+    Stylesheet.setStylesDir(StylesDir.absolutePath());
     Stylesheet.setOutputDirPath(a.applicationDirPath() + "/output");
 
     Stylesheet.setTheme("dark_cyan.xml");

@@ -1,7 +1,6 @@
 ACSS_OUT_ROOT = $${OUT_PWD}/../..
 
-QT += core
-QT -= gui
+QT += core gui widgets
 
 
 TARGET = exporter

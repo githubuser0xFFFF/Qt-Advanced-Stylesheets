@@ -13,6 +13,9 @@
 #include <QString>
 #include <QVector>
 #include <QPair>
+#include <QObject>
+
+class QIcon;
 
 namespace acss
 {
@@ -22,17 +25,27 @@ using QStringPair = QPair<QString, QString>;
 /**
  * Encapsulates all information about a single stylesheet
  */
-class CAdvancedStylesheet
+class CAdvancedStylesheet : public QObject
 {
+	Q_OBJECT
 private:
 	AdvancedStylesheetPrivate* d; ///< private data (pimpl)
 	friend struct AdvancedStylesheetPrivate;
 
 public:
+	enum eError
+	{
+		NoError,
+		CssTemplateError,
+		CssExportError,
+		ThemeXmlError,
+		StyleJsonError,
+		ResourceGeneratorError,
+	};
 	/**
 	 * Default Constructor
 	 */
-	CAdvancedStylesheet(const QString& StylesheetFolder);
+	CAdvancedStylesheet(QObject* parent = nullptr);
 
 	/**
 	 * Virtual Destructor
@@ -40,17 +53,47 @@ public:
 	virtual ~CAdvancedStylesheet();
 
 	/**
+	 * Set the directory path that contains all styles
+	 */
+	void setStylesDir(const QString& DirPath);
+
+	/**
+	 * Returns the set styles dir
+	 */
+	QString stylesDir() const;
+
+	/**
+	 * Set the current style
+	 */
+	bool setCurrentStyle(const QString& Style);
+
+	/**
+	 * Returns the current style
+	 */
+	QString currentStyle() const;
+
+	/**
+	 * Returns the folder of the current style.
+	 */
+	QString currentStyleFolder() const;
+
+	/**
+	 * Returns the list of available styles in the given styles directory
+	 */
+	const QStringList& styles() const;
+
+	/**
 	 * Returns the folder with the resource template
 	 */
 	QString resourcesTemplatesFolder() const;
 
 	/**
-	 * Returns the folders that contains all themes
+	 * Returns the folders that contains all themes for the current style
 	 */
 	QString themesFolder() const;
 
 	/**
-	 * Returns the fonts folder for the theme fonts
+	 * Returns the fonts folder for the theme fonts of the current style
 	 */
 	QString fontsFolder() const;
 
@@ -86,6 +129,17 @@ public:
 	 * Returns the processed theme stylesheet
 	 */
 	QString styleSheet() const;
+
+	/**
+	 * Returns the icon for the current style
+	 */
+	const QIcon& styleIcon() const;
+
+
+signals:
+	void currentStyleChanged(const QString& Style);
+
+	void currentThemeChanged(const QString& Theme);
 }; // class AdvancedStylesheet
 }
  // namespace namespace_name
