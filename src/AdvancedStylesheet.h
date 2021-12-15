@@ -29,12 +29,6 @@ private:
 	friend struct AdvancedStylesheetPrivate;
 
 public:
-	enum eResourceState
-	{
-		ResourceDisabled = 0,
-		ResourceNormal = 1
-	};
-
 	/**
 	 * Default Constructor
 	 */
@@ -59,12 +53,6 @@ public:
 	 * Returns the fonts folder for the theme fonts
 	 */
 	QString fontsFolder() const;
-
-	/**
-	 * Returns a vector with a list of colors that need to get replaced in
-	 * the resource template files
-	 */
-	QVector<QStringPair> resourceColorReplaceList(eResourceState State) const;
 
 	/**
 	 * The output dir path where the generated files will get stored

@@ -39,7 +39,7 @@ struct AdvancedStylesheetPrivate
 	QString StyleName;
 	QString IconFile;
 	QVector<QStringPair> ResourceReplaceList;
-	QJsonObject StyleJsonParameters;
+	QJsonObject JsonStyleParam;
 
 	/**
 	 * Private data constructor
@@ -68,11 +68,6 @@ struct AdvancedStylesheetPrivate
 	bool parseThemeFile(const QString& ThemeFilename);
 
 	/**
-	 * Parse the style XML file
-	 */
-	bool parseStyleXmlFile();
-
-	/**
 	 * Parse the style JSON file
 	 */
 	bool parseStyleJsonFile();
@@ -99,10 +94,10 @@ struct AdvancedStylesheetPrivate
 	void generateResources();
 
 	/**
-	 * Generate the output for normal or disabled state
+	 * Generate the resources for the variuous states
 	 */
 	void generateResourcesFor(const QString& SubDir,
-		CAdvancedStylesheet::eResourceState State, const QFileInfoList& Entries);
+		const QJsonObject& JsonObject, const QFileInfoList& Entries);
 
 	/**
 	 * Replace the in the given content the template color string with the
@@ -318,7 +313,7 @@ bool AdvancedStylesheetPrivate::parseStyleJsonFile()
 		return false;
 	}
 
-	auto json = JsonDocument.object();
+	auto json = JsonStyleParam = JsonDocument.object();
 	StyleName = json.value("name").toString();
 
 	QMap<QString, QString> Variables;
@@ -337,63 +332,35 @@ bool AdvancedStylesheetPrivate::parseStyleJsonFile()
 
 
 //============================================================================
-bool AdvancedStylesheetPrivate::parseStyleXmlFile()
+void AdvancedStylesheetPrivate::replaceColor(QByteArray& Content,
+	const QString& TemplateColor, const QString& ThemeColor) const
 {
-	QDir Dir(StylesheetFolder);
-	auto XmlFiles = Dir.entryInfoList({"*.xml"}, QDir::Files);
-	if (XmlFiles.count() < 1)
-	{
-		qDebug() << "Stylesheet folder does not contain a theme xml file";
-		return false;
-	}
-
-	if (XmlFiles.count() > 1)
-	{
-		qDebug() << "Stylesheet folder contains multiple theme xml files";
-		return false;
-	}
-
-	QFile StyleXmlFile(XmlFiles[0].absoluteFilePath());
-	StyleXmlFile.open(QIODevice::ReadOnly);
-	QXmlStreamReader s(&StyleXmlFile);
-	s.readNextStartElement();
-	if (s.name() != "style")
-	{
-		qDebug() << "Malformed style file - expected tag <style> instead of " << s.name();
-		return false;
-	}
-
-	s.readNextStartElement();
-	if (s.name() != "variables")
-	{
-		qDebug() << "Malformed style file - expected tag <variables> instead of " << s.name();
-		return false;
-	}
-
-
-	QMap<QString, QString> Variables;
-	auto Result = parseVariablesFromXml(s, "variable", Variables);
-	if (Result)
-	{
-		StyleVariables = Variables;
-	}
-
-	for (auto Var : StyleVariables)
-	{
-		std::cout << Var.toStdString() << std::endl;
-	}
-
-	return true;
+	Content.replace(TemplateColor.toLatin1(), ThemeColor.toLatin1());
 }
 
 
 //============================================================================
 void AdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
-	CAdvancedStylesheet::eResourceState State, const QFileInfoList& Entries)
+	const QJsonObject& JsonObject, const QFileInfoList& Entries)
 {
-	auto ColorReplaceList = _this->resourceColorReplaceList(State);
+	std::cout << "generateResourcesFor " << SubDir.toStdString() << std::endl;
 	const QString OutputDir = _this->outputDirPath() + "/" + SubDir;
 	QDir().mkpath(OutputDir);
+
+	// Fill the color replace list with the values read from style json file
+	QVector<QStringPair> ColorReplaceList;
+	for (auto it = JsonObject.constBegin(); it != JsonObject.constEnd(); ++it)
+	{
+		auto TemplateColor = it.key();
+		auto ThemeColor = it.value().toString();
+		if (!ThemeColor.startsWith('#'))
+		{
+			ThemeColor = _this->themeVariable(ThemeColor);
+		}
+		ColorReplaceList.append({TemplateColor, ThemeColor});
+	}
+
+	// Now loop through all resources svg files and replace the colors
 	for (const auto& Entry : Entries)
 	{
 		//std::cout << "File: " << Entry.absoluteFilePath().toStdString() << std::endl;
@@ -401,7 +368,6 @@ void AdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
 		SvgFile.open(QIODevice::ReadOnly);
 		auto Content = SvgFile.readAll();
 		SvgFile.close();
-
 
 		for (const auto& Replace : ColorReplaceList)
 		{
@@ -419,23 +385,33 @@ void AdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
 
 
 //============================================================================
-void AdvancedStylesheetPrivate::replaceColor(QByteArray& Content,
-	const QString& TemplateColor, const QString& ThemeColor) const
-{
-	//std::cout << "replaceColor: " << TemplateColor.toStdString()
-	//	<< " with " << ThemeColor.toStdString() << std::endl;
-	Content.replace(TemplateColor.toLatin1(), ThemeColor.toLatin1());
-}
-
-
-
-//============================================================================
 void AdvancedStylesheetPrivate::generateResources()
 {
 	QDir ResourceDir(_this->resourcesTemplatesFolder());
 	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
-	generateResourcesFor("disabled", CAdvancedStylesheet::ResourceDisabled, Entries);
-	generateResourcesFor("primary", CAdvancedStylesheet::ResourceNormal, Entries);
+
+	auto jresources = JsonStyleParam.value("resources").toObject();
+	if (jresources.isEmpty())
+	{
+		// properly handle error here
+		return;
+	}
+
+	// Process all resource generation variants
+	for (const auto& key : jresources.keys())
+	{
+		auto Param = jresources.value(key).toObject();
+		if (Param.isEmpty())
+		{
+			// properly handle error
+			return;
+		}
+		generateResourcesFor(key, Param, Entries);
+	}
+
+
+	//generateResourcesFor("disabled", CAdvancedStylesheet::ResourceDisabled, Entries);
+	//generateResourcesFor("primary", CAdvancedStylesheet::ResourceNormal, Entries);
 }
 
 
@@ -471,26 +447,6 @@ QString CAdvancedStylesheet::themesFolder() const
 QString CAdvancedStylesheet::fontsFolder() const
 {
 	return d->StylesheetFolder + "/fonts";
-}
-
-
-//============================================================================
-QVector<QStringPair> CAdvancedStylesheet::resourceColorReplaceList(eResourceState State) const
-{
-	QVector<QStringPair> Result;
-	if (ResourceDisabled == State)
-	{
-		Result << QStringPair("#0000ff", themeVariable("secondaryLightColor"))
-			   << QStringPair("#ff0000", themeVariable("secondaryColor"))
-			   << QStringPair("#000000", "#ffffff00"); // replace black with transparent
-	}
-	else
-	{
-		Result << QStringPair("#0000ff", themeVariable("primaryColor"))
-			   << QStringPair("#ff0000", themeVariable("secondaryColor"))
-			   << QStringPair("#000000", "#ffffff00"); // replace black with transparent
-	}
-	return Result;
 }
 
 
