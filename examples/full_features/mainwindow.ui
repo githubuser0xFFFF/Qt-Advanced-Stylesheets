@@ -34,39 +34,15 @@
         <item row="0" column="0" rowspan="2" colspan="2">
          <widget class="QToolBox" name="toolBox">
           <property name="currentIndex">
-           <number>2</number>
+           <number>1</number>
           </property>
-          <widget class="QWidget" name="page">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>96</width>
-             <height>26</height>
-            </rect>
-           </property>
-           <attribute name="label">
-            <string>WebEngine</string>
-           </attribute>
-           <layout class="QGridLayout" name="gridLayout_14">
-            <item row="0" column="0">
-             <widget class="QWebEngineView" name="webEngineView">
-              <property name="url">
-               <url>
-                <string>https://www.python.org/</string>
-               </url>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
           <widget class="QWidget" name="page_3">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>404</width>
-             <height>328</height>
+             <width>533</width>
+             <height>399</height>
             </rect>
            </property>
            <attribute name="label">
@@ -111,8 +87,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>436</width>
-             <height>408</height>
+             <width>533</width>
+             <height>399</height>
             </rect>
            </property>
            <attribute name="label">
@@ -123,7 +99,6 @@
              <widget class="QLabel" name="label_3">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -1431,7 +1406,7 @@
                </property>
                <property name="icon">
                 <iconset theme="media-playback-start">
-                 <normaloff>../../../../../../.designer/backup</normaloff>../../../../../../.designer/backup</iconset>
+                 <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
                </property>
               </row>
               <row>
@@ -1574,7 +1549,7 @@
                </property>
                <property name="icon">
                 <iconset theme="media-playback-start">
-                 <normaloff>../../../../../../.designer/backup</normaloff>../../../../../../.designer/backup</iconset>
+                 <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
                </property>
               </row>
               <row>
@@ -1963,7 +1938,7 @@
      <x>0</x>
      <y>0</y>
      <width>1329</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menumenu">
@@ -2157,10 +2132,10 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
        </property>
        <property name="html">
         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Noto Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;textEdit Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Noto Sans'; font-size:10pt;&quot;&gt;textEdit Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -2276,13 +2251,6 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QWebEngineView</class>
-   <extends>QWidget</extends>
-   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

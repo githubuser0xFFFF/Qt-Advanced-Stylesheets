@@ -19,8 +19,9 @@
 #include <QDir>
 #include <QRegularExpression>
 #include <QFontDatabase>
-
-#include "ResourceGenerator.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 namespace acss
 {
@@ -35,6 +36,10 @@ struct AdvancedStylesheetPrivate
 	QMap<QString, QString> StyleVariables;
 	QMap<QString, QString> ThemeVariables;
 	QString Stylesheet;
+	QString StyleName;
+	QString IconFile;
+	QVector<QStringPair> ResourceReplaceList;
+	QJsonObject StyleJsonParameters;
 
 	/**
 	 * Private data constructor
@@ -54,7 +59,7 @@ struct AdvancedStylesheetPrivate
 	/**
 	 * Parse a list of theme variables
 	 */
-	bool parseThemeVariables(QXmlStreamReader& s, const QString& VariableTagName,
+	bool parseVariablesFromXml(QXmlStreamReader& s, const QString& VariableTagName,
 		QMap<QString, QString>& Variable);
 
 	/**
@@ -66,6 +71,11 @@ struct AdvancedStylesheetPrivate
 	 * Parse the style XML file
 	 */
 	bool parseStyleXmlFile();
+
+	/**
+	 * Parse the style JSON file
+	 */
+	bool parseStyleJsonFile();
 
 	/**
 	 * Creates an Rgba color from a given color and an opacity value in the
@@ -82,6 +92,24 @@ struct AdvancedStylesheetPrivate
 	 * Register the style fonts to the font database
 	 */
 	void addFonts(QDir* Dir = nullptr);
+
+	/**
+	 * Generate the required icons for this theme
+	 */
+	void generateResources();
+
+	/**
+	 * Generate the output for normal or disabled state
+	 */
+	void generateResourcesFor(const QString& SubDir,
+		CAdvancedStylesheet::eResourceState State, const QFileInfoList& Entries);
+
+	/**
+	 * Replace the in the given content the template color string with the
+	 * theme color string
+	 */
+	void replaceColor(QByteArray& Content, const QString& TemplateColor,
+		const QString& ThemeColor) const;
 };
 // struct AdvancedStylesheetPrivate
 
@@ -209,7 +237,7 @@ void AdvancedStylesheetPrivate::addFonts(QDir* Dir)
 
 
 //============================================================================
-bool AdvancedStylesheetPrivate::parseThemeVariables(
+bool AdvancedStylesheetPrivate::parseVariablesFromXml(
 	QXmlStreamReader& s, const QString& TagName, QMap<QString, QString>& Variables)
 {
 	while (s.readNextStartElement())
@@ -255,8 +283,55 @@ bool AdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 	}
 
     auto Variables = StyleVariables;
-	parseThemeVariables(s, "color", Variables);
+	parseVariablesFromXml(s, "color", Variables);
 	this->ThemeVariables = Variables;
+	return true;
+}
+
+
+//============================================================================
+bool AdvancedStylesheetPrivate::parseStyleJsonFile()
+{
+	QDir Dir(StylesheetFolder);
+	auto JsonFiles = Dir.entryInfoList({"*.json"}, QDir::Files);
+	if (JsonFiles.count() < 1)
+	{
+		qDebug() << "Stylesheet folder does not contain a theme json file";
+		return false;
+	}
+
+	if (JsonFiles.count() > 1)
+	{
+		qDebug() << "Stylesheet folder contains multiple theme json files";
+		return false;
+	}
+
+	QFile StyleJsonFile(JsonFiles[0].absoluteFilePath());
+	StyleJsonFile.open(QIODevice::ReadOnly);
+
+	auto JsonData = StyleJsonFile.readAll();
+	QJsonParseError ParseError;
+	auto JsonDocument = QJsonDocument::fromJson(JsonData, &ParseError);
+	if (JsonDocument.isNull())
+	{
+		qDebug() << "Loading style json file caused error " << ParseError.errorString();
+		return false;
+	}
+
+	auto json = JsonDocument.object();
+	StyleName = json.value("name").toString();
+
+	QMap<QString, QString> Variables;
+	auto jvariables = json.value("variables").toObject();
+	for (const auto& key : jvariables.keys())
+	{
+		Variables.insert(key, jvariables.value(key).toString());
+	}
+
+	StyleVariables = Variables;
+	IconFile = json.value("icon").toString();
+	std::cout << "icon: " << IconFile.toStdString() << std::endl;
+
 	return true;
 }
 
@@ -265,22 +340,22 @@ bool AdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 bool AdvancedStylesheetPrivate::parseStyleXmlFile()
 {
 	QDir Dir(StylesheetFolder);
-	auto TemplateFiles = Dir.entryInfoList({"*.xml"}, QDir::Files);
-	if (TemplateFiles.count() < 1)
+	auto XmlFiles = Dir.entryInfoList({"*.xml"}, QDir::Files);
+	if (XmlFiles.count() < 1)
 	{
 		qDebug() << "Stylesheet folder does not contain a theme xml file";
 		return false;
 	}
 
-	if (TemplateFiles.count() > 1)
+	if (XmlFiles.count() > 1)
 	{
 		qDebug() << "Stylesheet folder contains multiple theme xml files";
 		return false;
 	}
 
-	QFile ThemeXmlFile(TemplateFiles[0].absoluteFilePath());
-	ThemeXmlFile.open(QIODevice::ReadOnly);
-	QXmlStreamReader s(&ThemeXmlFile);
+	QFile StyleXmlFile(XmlFiles[0].absoluteFilePath());
+	StyleXmlFile.open(QIODevice::ReadOnly);
+	QXmlStreamReader s(&StyleXmlFile);
 	s.readNextStartElement();
 	if (s.name() != "style")
 	{
@@ -297,7 +372,7 @@ bool AdvancedStylesheetPrivate::parseStyleXmlFile()
 
 
 	QMap<QString, QString> Variables;
-	auto Result = parseThemeVariables(s, "variable", Variables);
+	auto Result = parseVariablesFromXml(s, "variable", Variables);
 	if (Result)
 	{
 		StyleVariables = Variables;
@@ -313,13 +388,62 @@ bool AdvancedStylesheetPrivate::parseStyleXmlFile()
 
 
 //============================================================================
+void AdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
+	CAdvancedStylesheet::eResourceState State, const QFileInfoList& Entries)
+{
+	auto ColorReplaceList = _this->resourceColorReplaceList(State);
+	const QString OutputDir = _this->outputDirPath() + "/" + SubDir;
+	QDir().mkpath(OutputDir);
+	for (const auto& Entry : Entries)
+	{
+		//std::cout << "File: " << Entry.absoluteFilePath().toStdString() << std::endl;
+		QFile SvgFile(Entry.absoluteFilePath());
+		SvgFile.open(QIODevice::ReadOnly);
+		auto Content = SvgFile.readAll();
+		SvgFile.close();
+
+
+		for (const auto& Replace : ColorReplaceList)
+		{
+			replaceColor(Content, Replace.first, Replace.second);
+		}
+
+		QString OutputFilename = OutputDir + "/" + Entry.fileName();
+		//std::cout << "OutputFilename: " << OutputFilename.toStdString() << std::endl;
+		QFile OutputFile(OutputFilename);
+		OutputFile.open(QIODevice::WriteOnly);
+		OutputFile.write(Content);
+		OutputFile.close();
+	}
+}
+
+
+//============================================================================
+void AdvancedStylesheetPrivate::replaceColor(QByteArray& Content,
+	const QString& TemplateColor, const QString& ThemeColor) const
+{
+	//std::cout << "replaceColor: " << TemplateColor.toStdString()
+	//	<< " with " << ThemeColor.toStdString() << std::endl;
+	Content.replace(TemplateColor.toLatin1(), ThemeColor.toLatin1());
+}
+
+
+
+//============================================================================
+void AdvancedStylesheetPrivate::generateResources()
+{
+	QDir ResourceDir(_this->resourcesTemplatesFolder());
+	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
+	generateResourcesFor("disabled", CAdvancedStylesheet::ResourceDisabled, Entries);
+	generateResourcesFor("primary", CAdvancedStylesheet::ResourceNormal, Entries);
+}
+
+
+//============================================================================
 CAdvancedStylesheet::CAdvancedStylesheet(const QString& StylesheetFolder) :
 	d(new AdvancedStylesheetPrivate(this))
 {
 	d->StylesheetFolder = StylesheetFolder;
-	d->ThemeVariables.insert("primaryColor", "#ffd740");
-	d->ThemeVariables.insert("secondaryColor", "#e3e3e3");
-	d->ThemeVariables.insert("secondaryLight", "#4f5b62");
 }
 
 //============================================================================
@@ -401,7 +525,7 @@ void CAdvancedStylesheet::setThemeVariabe(const QString& VariableId, const QStri
 //============================================================================
 bool CAdvancedStylesheet::setTheme(const QString& Theme)
 {
-	auto Result = d->parseStyleXmlFile();
+	auto Result = d->parseStyleJsonFile();
 	if (!Result)
 	{
 		return false;
@@ -419,8 +543,7 @@ bool CAdvancedStylesheet::setTheme(const QString& Theme)
 	}
 
 	d->addFonts();
-	CResourceGenerator ResourceGenerator(this);
-	ResourceGenerator.generate();
+	d->generateResources();
 
 	QDir::addSearchPath("icon", d->OutputDir);
 	return Result;

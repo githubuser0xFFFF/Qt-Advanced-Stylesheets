@@ -30,12 +30,10 @@ windows {
 #RESOURCES += ads.qrc
 
 HEADERS += \
-	ResourceGenerator.h \
 	AdvancedStylesheet.h
 
 
 SOURCES += \
-	ResourceGenerator.cpp\
 	AdvancedStylesheet.cpp
 
 

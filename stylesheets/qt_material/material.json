@@ -1,0 +1,24 @@
+{
+    "name" : "material",
+    "icon" : "material_icon.svg",
+    "variables" : {
+        "font_family" : "Roboto",
+        "font_size" : "14px",
+        "line_height" : "14px",
+        "danger" :  "#dc3545",
+        "warning" : "#ffc107",
+        "success" : "#17a2b8"
+    },
+    "resources" : {
+        "primary" : {
+            "#0000ff" : "primaryColor",
+            "#ff0000" : "secondaryColor",
+            "#000000" : "#ffffff00"
+        },
+        "disabled" : {
+            "#0000ff" : "secondaryLightColor",
+            "#ff0000" : "secondaryColor",
+            "#000000" : "#ffffff00"
+        }
+    }
+}
