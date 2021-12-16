@@ -20,6 +20,8 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui
+    
+RESOURCES += full_features.qrc
 
 
 LIBS += -L$${ACSS_OUT_ROOT}/lib

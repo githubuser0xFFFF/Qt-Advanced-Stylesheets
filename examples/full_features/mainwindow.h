@@ -7,15 +7,22 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+struct MainWindowPrivate;
+
 class CMainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
     CMainWindow(QWidget *parent = nullptr);
-    ~CMainWindow();
+    virtual ~CMainWindow();
 
 private:
-    Ui::MainWindow *ui;
+    MainWindowPrivate* d;
+    friend struct MainWindowPrivate;// pimpl
+
+private slots:
+	void onThemeActionTriggered();
+	void onStyleManagerStylesheetChanged();
 };
 #endif // CMAINWINDOW_H

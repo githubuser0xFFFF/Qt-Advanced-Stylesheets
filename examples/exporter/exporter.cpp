@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
     QDir StylesDir(a.applicationDirPath() + "/../../stylesheets");
     std::cout << StylesDir.absolutePath().toStdString() << std::endl;
     CStyleManager Stylesheet;
-    Stylesheet.setStylesDir(StylesDir.absolutePath());
+    Stylesheet.setStylesDirPath(StylesDir.absolutePath());
     Stylesheet.setOutputDirPath(a.applicationDirPath() + "/output");
 
-    Stylesheet.setTheme("dark_cyan.xml");
+    Stylesheet.setCurrentTheme("dark_cyan.xml");
 }

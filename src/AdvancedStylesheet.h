@@ -55,17 +55,12 @@ public:
 	/**
 	 * Set the directory path that contains all styles
 	 */
-	void setStylesDir(const QString& DirPath);
+	void setStylesDirPath(const QString& DirPath);
 
 	/**
 	 * Returns the set styles dir
 	 */
-	QString stylesDir() const;
-
-	/**
-	 * Set the current style
-	 */
-	bool setCurrentStyle(const QString& Style);
+	QString stylesDirPath() const;
 
 	/**
 	 * Returns the current style
@@ -73,9 +68,11 @@ public:
 	QString currentStyle() const;
 
 	/**
-	 * Returns the folder of the current style.
+	 * Returns the absolute path of the current style.
+	 * If your styles stylesDirPath() is C:/styles and your current style is
+	 * qt_material then this function returns C:/styles/qt_material
 	 */
-	QString currentStyleFolder() const;
+	QString currentStylePath() const;
 
 	/**
 	 * Returns the list of available styles in the given styles directory
@@ -83,22 +80,42 @@ public:
 	const QStringList& styles() const;
 
 	/**
-	 * Returns the folder with the resource template
+	 * Returns a list of all themes for the current style.
+	 * If no style has been set, this function returns an empty list
 	 */
-	QString resourcesTemplatesFolder() const;
+	const QStringList& themes() const;
 
 	/**
-	 * Returns the folders that contains all themes for the current style
+	 * Returns a list of all theme variable names for colors
 	 */
-	QString themesFolder() const;
+	const QStringList& themeColors() const;
 
 	/**
-	 * Returns the fonts folder for the theme fonts of the current style
+	 * Returns the absolute path to the directory with the resources (svg
+	 * icons) of the current style.
+	 * If your currentStylePath() is `C:/styles/qt_material` then this function
+	 * returns `C:/styles/qt_material/resources`.
 	 */
-	QString fontsFolder() const;
+	QString resourceTemplatesPath() const;
 
 	/**
-	 * The output dir path where the generated files will get stored
+	 * Returns the absolute path to the themes directory.
+	 * If your currentStylePath() is `C:/styles/qt_material` then this function
+	 * returns `C:/styles/qt_material/themes`.
+	 */
+	QString themesPath() const;
+
+	/**
+	 * Returns the abolute path to the style fonts directory.
+	 * If your currentStylePath() is `C:/styles/qt_material` then this function
+	 * returns `C:/styles/qt_material/fonts`.
+	 */
+	QString fontsPath() const;
+
+	/**
+	 * Returns the absolute output dir path where the generated files will get
+	 * stored.
+	 * \see setOutputDirPath()
 	 */
 	QString outputDirPath() const;
 
@@ -108,33 +125,80 @@ public:
 	void setOutputDirPath(const QString& Path);
 
 	/**
-	 * Returns the theme color for the given ColorId.
-	 * For example themeColor("primaryColor") may return "#ac2300".
-	 * Returns an empty string, if the given ColorId does not exist
+	 * Returns the value for the given theme variable.
+	 * For example themeVariable("primaryColor") may return "#ac2300".
+	 * Returns an empty string, if the given theme variable does not exist.
 	 */
 	QString themeVariable(const QString& VariableId) const;
 
 	/**
-	 * You can use this function to set or overwrite a theme variable
+	 * You can use this function to add or overwrite a theme variable.
+	 * You may use this function to add application specific colors that are not
+	 * defined in the current style.
+	 * If you changed a theme variable or a number of theme variables then you
+	 * should call updateStylesheet() to request a reprocessing of the style
+	 * template and to update the stylesheet.
 	 */
 	void setThemeVariabe(const QString& VariableId, const QString& Value);
 
 	/**
-	 * Sets the theme to use.
-	 * Returns true on success and false on error
+	 * Returns the current set theme
 	 */
-	bool setTheme(const QString& Theme);
+	QString currentTheme() const;
 
 	/**
-	 * Returns the processed theme stylesheet
+	 * Returns the processed style stylesheet.
+	 * If the style or the theme of a style changed, you can read the new
+	 * stylesheet from this function
 	 */
 	QString styleSheet() const;
 
 	/**
-	 * Returns the icon for the current style
+	 * This function replaces the style variables in the given template with
+	 * the value of the registered style variables.
+	 * You can use this function if you have split your stylesheet into
+	 * several parts or if you use plugins that provide additional stylesheets
+	 * to get the processed stylesheed if the theme changed.
+	 * Returns the final stylesheet or an empty string in case of an error.
+	 */
+	QString processStylesheetTemplate(const QString& Template);
+
+	/**
+	 * Returns the icon for the current style or an empty icon if the style does
+	 * not provide an icon
 	 */
 	const QIcon& styleIcon() const;
 
+	/**
+	 * Returns the error state of the object.
+	 */
+	eError error() const;
+
+	/**
+	 * Returns a string describing the last error that occured
+	 */
+	QString errorString() const;
+
+public slots:
+	/**
+	 * Sets the theme to use.
+	 * Use the theme name without the file extension. That means, if your
+	 * theme file id dark_cyan.xml then set the theme to `dark_cyan'
+	 * Returns true on success and false on error
+	 */
+	bool setCurrentTheme(const QString& Theme);
+
+	/**
+	 * Set the current style
+	 */
+	bool setCurrentStyle(const QString& Style);
+
+	/**
+	 * Call this function if you would like to reprocess the style template.
+	 * Call this function, if you have changed some theme variables via
+	 * setThemeVariable() to request an update of the stylesheet.
+	 */
+	bool updateStylesheet();
 
 signals:
 	/**
@@ -146,6 +210,13 @@ signals:
 	 * This signal is emitted, if the selected theme in a style changed
 	 */
 	void currentThemeChanged(const QString& Theme);
+
+	/**
+	 * This signal is emitted if the stylesheet changed.
+	 * The stylecheed changes if the style changes, the theme changes or if a
+	 * style variable changed an the user requested a styleheet update
+	 */
+	void stylesheetChanged();
 }; // class StyleManager
 }
  // namespace namespace_name
