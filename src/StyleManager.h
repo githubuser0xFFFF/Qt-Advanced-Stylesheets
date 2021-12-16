@@ -125,6 +125,14 @@ public:
 	void setOutputDirPath(const QString& Path);
 
 	/**
+	 * Returns the output path for the current style.
+	 * The output path is the outputDirPath() + the style name.
+	 * If your output path is C:/temp/styles and your style is qt_material
+	 * then this functions returns C:/temp/styles/qt_material
+	 */
+	QString currentStyleOutputPath() const;
+
+	/**
 	 * Returns the value for the given theme variable.
 	 * For example themeVariable("primaryColor") may return "#ac2300".
 	 * Returns an empty string, if the given theme variable does not exist.

@@ -1,6 +1,7 @@
 {
     "name" : "material",
     "icon" : "material_icon.svg",
+    
     "variables" : {
         "font_family" : "Roboto",
         "font_size" : "12px",
@@ -9,6 +10,7 @@
         "warning" : "#ffc107",
         "success" : "#17a2b8"
     },
+
     "resources" : {
         "primary" : {
             "#0000ff" : "primaryColor",
@@ -19,6 +21,37 @@
             "#0000ff" : "secondaryLightColor",
             "#ff0000" : "secondaryColor",
             "#000000" : "#ffffff00"
+        }
+    },
+
+    "palette" : {
+        "active" : {
+            "Window" : "",
+            "WindowText" : "",
+            "Base" : "",
+            "AlternateBase" : "",
+            "ToolTipBase" : "",
+            "ToolTipText" : "",
+            "PlaceholderText" : "",
+            "Text" : "",
+            "Button" : "",
+            "ButtonText" : "",
+            "BrightText" : "",
+            "Light" : "",
+            "Midlight" : "",
+            "Dark" : "",
+            "Mid" : "",
+            "Shadow" : "",
+            "Highlight" : "",
+            "HighlightedText" : ""
+        },
+
+        "inactive" : {
+
+        },
+
+        "disabled" : {
+
         }
     }
 }

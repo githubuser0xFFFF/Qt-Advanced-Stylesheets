@@ -230,8 +230,9 @@ bool StyleManagerPrivate::generateStylesheet()
 //============================================================================
 void StyleManagerPrivate::exportStylesheet(const QString& Filename)
 {
-	QDir().mkpath(OutputDir);
-	QString OutputFilename = OutputDir + "/" + Filename;
+	auto OutputPath = _this->currentStyleOutputPath();
+	QDir().mkpath(OutputPath);
+	QString OutputFilename = OutputPath + "/" + Filename;
 	QFile OutputFile(OutputFilename);
 	if (!OutputFile.open(QIODevice::WriteOnly))
 	{
@@ -398,7 +399,7 @@ void StyleManagerPrivate::replaceColor(QByteArray& Content,
 bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 	const QJsonObject& JsonObject, const QFileInfoList& Entries)
 {
-	const QString OutputDir = _this->outputDirPath() + "/" + SubDir;
+	const QString OutputDir = _this->currentStyleOutputPath() + "/" + SubDir;
 	if (!QDir().mkpath(OutputDir))
 	{
 		setError(CStyleManager::ResourceGeneratorError, "Error "
@@ -525,6 +526,7 @@ bool CStyleManager::setCurrentStyle(const QString& Style)
 		Theme.replace(".xml", "");
 	}
 	auto Result = d->parseStyleJsonFile();
+	QDir::addSearchPath("icon", currentStyleOutputPath());
 	emit currentStyleChanged(d->CurrentStyle);
 	emit stylesheetChanged();
 	return Result;
@@ -577,6 +579,13 @@ QString CStyleManager::outputDirPath() const
 void CStyleManager::setOutputDirPath(const QString& Path)
 {
 	d->OutputDir = Path;
+}
+
+
+//============================================================================
+QString CStyleManager::currentStyleOutputPath() const
+{
+	return outputDirPath() + "/" + d->CurrentStyle;
 }
 
 
@@ -634,7 +643,6 @@ bool CStyleManager::setCurrentTheme(const QString& Theme)
 	}
 	d->generateResources();
 
-	QDir::addSearchPath("icon", d->OutputDir);
 	emit currentThemeChanged(d->CurrentTheme);
 	emit stylesheetChanged();
 	return true;
