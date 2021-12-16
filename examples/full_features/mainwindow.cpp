@@ -64,7 +64,6 @@ void MainWindowPrivate::createThemeColorDockWidget()
 
 void MainWindowPrivate::updateThemeColorButtons()
 {
-	std::cout << "updateThemeColorButtons" << std::endl;
 	for (auto Button : ThemeColorButtons)
 	{
 		auto Color = StyleManager->themeColor(Button->text());
@@ -106,7 +105,6 @@ CMainWindow::CMainWindow(QWidget *parent)
     : QMainWindow(parent),
       d(new MainWindowPrivate(this))
 {
-	std::cout << "Test: " << std::endl;
     d->ui.setupUi(this);
 
     QString AppDir = qApp->applicationDirPath();

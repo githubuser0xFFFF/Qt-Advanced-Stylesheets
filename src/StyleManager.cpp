@@ -23,6 +23,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QIcon>
+#include <QApplication>
 
 namespace acss
 {
@@ -248,6 +249,14 @@ void StyleManagerPrivate::exportStylesheet(const QString& Filename)
 //============================================================================
 void StyleManagerPrivate::addFonts(QDir* Dir)
 {
+	// I dont't know, if this is the right way to detect, if there are any
+	// widgets. The call to QFontDatabase::addApplicationFont() will crash, if
+	// there are no widgets
+	if (qApp->allWidgets().isEmpty())
+	{
+		return;
+	}
+
 	if (!Dir)
 	{
 		QDir FontsDir(_this->fontsPath());
