@@ -24,7 +24,7 @@ This allows runtime color switching for stylesheet themes. The libray also
 adjusts the colors of the *.svg resources at runtime.
 If you run the `full_features` example, then you can test the functionality.
 
-There is some custom dark themes:
+There are some custom dark themes:
 
 ![dark](doc/qt_material_dark.gif)
 
@@ -77,7 +77,7 @@ qApp->setStyleSheet(StyleManager.styleSheet());
 ## Run examples
 
 The `full_features` example shows a window with almost all widgets to test all 
-themes and **create new ones**.
+themes and create new ones.
 
 ![theme](doc/theme.gif)
 
