@@ -23,7 +23,7 @@ struct StyleManagerPrivate;
 using QStringPair = QPair<QString, QString>;
 
 /**
- * Encapsulates all information about a single stylesheet
+ * Encapsulates all information about a single stylesheet based style
  */
 class CStyleManager : public QObject
 {

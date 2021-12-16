@@ -1,4 +1,7 @@
 #include "mainwindow.h"
+
+#include <StyleManager.h>
+
 #include "ui_mainwindow.h"
 #include <QDir>
 #include <QApplication>
@@ -9,7 +12,6 @@
 #include <QPushButton>
 #include <QColorDialog>
 
-#include "AdvancedStylesheet.h"
 #include <iostream>
 
 
@@ -109,7 +111,7 @@ CMainWindow::CMainWindow(QWidget *parent)
 
     QString AppDir = qApp->applicationDirPath();
     d->StyleManager = new acss::CStyleManager(this);
-    d->StyleManager->setStylesDirPath(AppDir + "/../../stylesheets");
+    d->StyleManager->setStylesDirPath(AppDir + "/../../styles");
     d->StyleManager->setOutputDirPath(AppDir + "/output");
     d->StyleManager->setCurrentStyle("qt_material");
     d->StyleManager->setCurrentTheme("dark_teal");

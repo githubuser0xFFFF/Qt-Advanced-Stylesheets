@@ -30,17 +30,18 @@ windows {
 #RESOURCES += ads.qrc
 
 HEADERS += \
-	AdvancedStylesheet.h
+	StyleManager.h
 
 
 SOURCES += \
-	AdvancedStylesheet.cpp
+	StyleManager.cpp
 
 
 isEmpty(PREFIX){
 	PREFIX=../installed
 	warning("Install Prefix not set")
 }
+
 headers.path=$$PREFIX/include
 headers.files=$$HEADERS
 target.path=$$PREFIX/lib

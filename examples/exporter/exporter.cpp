@@ -1,8 +1,8 @@
+#include <StyleManager.h>
 #include <QCoreApplication>
 #include <QDir>
 
 #include <iostream>
-#include "AdvancedStylesheet.h"
 
 using namespace acss;
 
