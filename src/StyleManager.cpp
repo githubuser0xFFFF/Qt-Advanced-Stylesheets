@@ -259,7 +259,7 @@ void StyleManagerPrivate::addFonts(QDir* Dir)
 
 	if (!Dir)
 	{
-		QDir FontsDir(_this->fontsPath());
+		QDir FontsDir(_this->path(CStyleManager::FontsLocation));
 		addFonts(&FontsDir);
 	}
 	else
@@ -320,7 +320,7 @@ bool StyleManagerPrivate::parseVariablesFromXml(
 //============================================================================
 bool StyleManagerPrivate::parseThemeFile(const QString& Theme)
 {
-	QString ThemeFileName = _this->themesPath() + "/" + Theme;
+	QString ThemeFileName = _this->path(CStyleManager::ThemesLocation) + "/" + Theme;
 	QFile ThemeFile(ThemeFileName);
 	ThemeFile.open(QIODevice::ReadOnly);
 	QXmlStreamReader s(&ThemeFile);
@@ -458,7 +458,7 @@ bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 //============================================================================
 bool StyleManagerPrivate::generateResources()
 {
-	QDir ResourceDir(_this->resourceTemplatesPath());
+	QDir ResourceDir(_this->path(CStyleManager::ResourceTemplatesLocation));
 	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
 
 	auto jresources = JsonStyleParam.value("resources").toObject();
@@ -528,7 +528,7 @@ bool CStyleManager::setCurrentStyle(const QString& Style)
 {
 	d->clearError();
 	d->CurrentStyle = Style;
-	QDir Dir(themesPath());
+	QDir Dir(path(ThemesLocation));
 	d->Themes = Dir.entryList({"*.xml"}, QDir::Files);
 	for (auto& Theme : d->Themes)
 	{
@@ -553,27 +553,6 @@ QString CStyleManager::currentStyle() const
 QString CStyleManager::currentStylePath() const
 {
 	return d->StylesDir + "/" + d->CurrentStyle;
-}
-
-
-//============================================================================
-QString CStyleManager::resourceTemplatesPath() const
-{
-	return currentStylePath() + "/resources";
-}
-
-
-//============================================================================
-QString CStyleManager::themesPath() const
-{
-	return currentStylePath() + "/themes";
-}
-
-
-//============================================================================
-QString CStyleManager::fontsPath() const
-{
-	return currentStylePath() + "/fonts";
 }
 
 
@@ -619,7 +598,7 @@ QColor CStyleManager::themeColor(const QString& VariableId) const
 
 
 //============================================================================
-void CStyleManager::setThemeVariabeValue(const QString& VariableId, const QString& Value)
+void CStyleManager::setThemeVariableValue(const QString& VariableId, const QString& Value)
 {
 	d->ThemeVariables.insert(VariableId, Value);
 	auto it = d->ThemeColors.find(VariableId);
@@ -722,7 +701,7 @@ QString CStyleManager::processStylesheetTemplate(const QString& Template)
 
 
 //============================================================================
-const QMap<QString, QString>& CStyleManager::themeColors() const
+const QMap<QString, QString>& CStyleManager::themeColorVariables() const
 {
 	return d->ThemeColors;
 }
@@ -739,6 +718,20 @@ CStyleManager::eError CStyleManager::error() const
 QString CStyleManager::errorString() const
 {
 	return d->ErrorString;
+}
+
+
+//============================================================================
+QString CStyleManager::path(eLocation Location) const
+{
+	switch (Location)
+	{
+	case ThemesLocation: return currentStylePath() + "/themes";
+	case ResourceTemplatesLocation: return currentStylePath() + "/resources";
+	case FontsLocation: return currentStylePath() + "/fonts";
+	}
+
+	return QString();
 }
 
 } // namespace acss

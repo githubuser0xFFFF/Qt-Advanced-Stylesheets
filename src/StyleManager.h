@@ -42,6 +42,14 @@ public:
 		StyleJsonError,
 		ResourceGeneratorError,
 	};
+
+	enum eLocation
+	{
+		ThemesLocation,
+		ResourceTemplatesLocation,
+		FontsLocation
+	};
+
 	/**
 	 * Default Constructor
 	 */
@@ -86,31 +94,14 @@ public:
 	const QStringList& themes() const;
 
 	/**
-	 * Returns a list of all theme variable names for colors
+	 * Returns a list of all theme variables for colors
 	 */
-	const QMap<QString, QString>& themeColors() const;
+	const QMap<QString, QString>& themeColorVariables() const;
 
 	/**
-	 * Returns the absolute path to the directory with the resources (svg
-	 * icons) of the current style.
-	 * If your currentStylePath() is `C:/styles/qt_material` then this function
-	 * returns `C:/styles/qt_material/resources`.
+	 * Returns the absolute dir path for the given location
 	 */
-	QString resourceTemplatesPath() const;
-
-	/**
-	 * Returns the absolute path to the themes directory.
-	 * If your currentStylePath() is `C:/styles/qt_material` then this function
-	 * returns `C:/styles/qt_material/themes`.
-	 */
-	QString themesPath() const;
-
-	/**
-	 * Returns the abolute path to the style fonts directory.
-	 * If your currentStylePath() is `C:/styles/qt_material` then this function
-	 * returns `C:/styles/qt_material/fonts`.
-	 */
-	QString fontsPath() const;
+	QString path(eLocation Location) const;
 
 	/**
 	 * Returns the absolute output dir path where the generated files will get
@@ -147,7 +138,7 @@ public:
 	 * should call updateStylesheet() to request a reprocessing of the style
 	 * template and to update the stylesheet.
 	 */
-	void setThemeVariabeValue(const QString& VariableId, const QString& Value);
+	void setThemeVariableValue(const QString& VariableId, const QString& Value);
 
 	/**
 	 * Returns the color for the given VariableId.
@@ -193,6 +184,7 @@ public:
 	 * Returns a string describing the last error that occured
 	 */
 	QString errorString() const;
+
 
 public slots:
 	/**

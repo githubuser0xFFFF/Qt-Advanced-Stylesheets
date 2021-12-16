@@ -49,7 +49,7 @@ void MainWindowPrivate::createThemeColorDockWidget()
 	_this->addDockWidget(Qt::LeftDockWidgetArea, dock);
 	dock->setFloating(true);
 
-	const auto& ThemeColors = StyleManager->themeColors();
+	const auto& ThemeColors = StyleManager->themeColorVariables();
 	for (auto itc = ThemeColors.constBegin(); itc != ThemeColors.constEnd(); ++itc)
 	{
 		auto Button = new QPushButton(itc.key());
@@ -154,7 +154,7 @@ void CMainWindow::onThemeColorButtonClicked()
 		return;
 	}
 	Color = ColorDialog.currentColor();
-	d->StyleManager->setThemeVariabeValue(Button->text(), Color.name());
+	d->StyleManager->setThemeVariableValue(Button->text(), Color.name());
 	d->StyleManager->updateStylesheet();
 }
 
