@@ -1,10 +1,10 @@
-#ifndef AdvancedStylesheetH
-#define AdvancedStylesheetH
+#ifndef StyleManagerH
+#define StyleManagerH
 //============================================================================
-/// \file   AdvancedStylesheet.h
+/// \file   StyleManager.h
 /// \author Uwe Kindler
 /// \date   13.12.2021
-/// \brief  Declaration of CAdvancedStylesheet class
+/// \brief  Declaration of CStyleManager class
 //============================================================================
 
 //============================================================================
@@ -19,18 +19,18 @@ class QIcon;
 
 namespace acss
 {
-struct AdvancedStylesheetPrivate;
+struct StyleManagerPrivate;
 using QStringPair = QPair<QString, QString>;
 
 /**
  * Encapsulates all information about a single stylesheet
  */
-class CAdvancedStylesheet : public QObject
+class CStyleManager : public QObject
 {
 	Q_OBJECT
 private:
-	AdvancedStylesheetPrivate* d; ///< private data (pimpl)
-	friend struct AdvancedStylesheetPrivate;
+	StyleManagerPrivate* d; ///< private data (pimpl)
+	friend struct StyleManagerPrivate;
 
 public:
 	enum eError
@@ -45,12 +45,12 @@ public:
 	/**
 	 * Default Constructor
 	 */
-	CAdvancedStylesheet(QObject* parent = nullptr);
+	CStyleManager(QObject* parent = nullptr);
 
 	/**
 	 * Virtual Destructor
 	 */
-	virtual ~CAdvancedStylesheet();
+	virtual ~CStyleManager();
 
 	/**
 	 * Set the directory path that contains all styles
@@ -137,12 +137,18 @@ public:
 
 
 signals:
+	/**
+	 * This signal is emitted if the selected style changed
+	 */
 	void currentStyleChanged(const QString& Style);
 
+	/**
+	 * This signal is emitted, if the selected theme in a style changed
+	 */
 	void currentThemeChanged(const QString& Theme);
-}; // class AdvancedStylesheet
+}; // class StyleManager
 }
  // namespace namespace_name
 //-----------------------------------------------------------------------------
-#endif // AdvancedStylesheetH
+#endif // StyleManagerH
 

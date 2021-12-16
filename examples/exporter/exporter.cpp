@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 
     QDir StylesDir(a.applicationDirPath() + "/../../stylesheets");
     std::cout << StylesDir.absolutePath().toStdString() << std::endl;
-    CAdvancedStylesheet Stylesheet;
+    CStyleManager Stylesheet;
     Stylesheet.setStylesDir(StylesDir.absolutePath());
     Stylesheet.setOutputDirPath(a.applicationDirPath() + "/output");
 
