@@ -35,8 +35,8 @@ struct StyleManagerPrivate
 	QString StylesDir;
 	QString OutputDir;
 	QMap<QString, QString> StyleVariables;
-	QMap<QString, QString> ThemeVariables;
-	QStringList ThemeColors;
+	QMap<QString, QString> ThemeColors;
+	QMap<QString, QString> ThemeVariables;// theme variables contains StyleVariables and ThemeColors
 	QString Stylesheet;
 	QString CurrentStyle;
 	QString CurrentTheme;
@@ -181,7 +181,7 @@ void StyleManagerPrivate::replaceStylesheetVariables(QString& Content)
 		if (HasOpacity)
 		{
 			auto Values = TemplateVariable.split("|");
-			ValueString = _this->themeVariable(Values[0].toString());
+			ValueString = _this->themeVariableValue(Values[0].toString());
 			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
 			bool Ok;
 			auto Opacity = OpacityStr.toFloat(&Ok);
@@ -189,7 +189,7 @@ void StyleManagerPrivate::replaceStylesheetVariables(QString& Content)
 		}
 		else
 		{
-			ValueString = _this->themeVariable(TemplateVariable.toString());
+			ValueString = _this->themeVariableValue(TemplateVariable.toString());
 		}
 
 		Content.replace(index, MatchString.size(), ValueString);
@@ -326,7 +326,7 @@ bool StyleManagerPrivate::parseThemeFile(const QString& Theme)
 	parseVariablesFromXml(s, "color", ColorVariables);
 	this->ThemeVariables = this->StyleVariables;
 	this->ThemeVariables.insert(ColorVariables);
-	this->ThemeColors = ColorVariables.keys();
+	this->ThemeColors = ColorVariables;
 	return true;
 }
 
@@ -416,7 +416,7 @@ bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 		// If it does not start with # then it is a theme variable
 		if (!ThemeColor.startsWith('#'))
 		{
-			ThemeColor = _this->themeVariable(ThemeColor);
+			ThemeColor = _this->themeVariableValue(ThemeColor);
 		}
 		ColorReplaceList.append({TemplateColor, ThemeColor});
 	}
@@ -581,16 +581,34 @@ void CStyleManager::setOutputDirPath(const QString& Path)
 
 
 //============================================================================
-QString CStyleManager::themeVariable(const QString& VariableId) const
+QString CStyleManager::themeVariableValue(const QString& VariableId) const
 {
 	return d->ThemeVariables.value(VariableId, QString());
 }
 
 
 //============================================================================
-void CStyleManager::setThemeVariabe(const QString& VariableId, const QString& Value)
+QColor CStyleManager::themeColor(const QString& VariableId) const
+{
+	auto ColorString = d->ThemeColors.value(VariableId, QString());
+	if (ColorString.isEmpty())
+	{
+		return QColor();
+	}
+
+	return QColor(ColorString);
+}
+
+
+//============================================================================
+void CStyleManager::setThemeVariabeValue(const QString& VariableId, const QString& Value)
 {
 	d->ThemeVariables.insert(VariableId, Value);
+	auto it = d->ThemeColors.find(VariableId);
+	if (it != d->ThemeColors.end())
+	{
+		it.value() = Value;
+	}
 }
 
 
@@ -687,7 +705,7 @@ QString CStyleManager::processStylesheetTemplate(const QString& Template)
 
 
 //============================================================================
-const QStringList& CStyleManager::themeColors() const
+const QMap<QString, QString>& CStyleManager::themeColors() const
 {
 	return d->ThemeColors;
 }

@@ -24,5 +24,6 @@ private:
 private slots:
 	void onThemeActionTriggered();
 	void onStyleManagerStylesheetChanged();
+	void onThemeColorButtonClicked();
 };
 #endif // CMAINWINDOW_H

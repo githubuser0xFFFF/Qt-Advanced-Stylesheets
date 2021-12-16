@@ -88,7 +88,7 @@ public:
 	/**
 	 * Returns a list of all theme variable names for colors
 	 */
-	const QStringList& themeColors() const;
+	const QMap<QString, QString>& themeColors() const;
 
 	/**
 	 * Returns the absolute path to the directory with the resources (svg
@@ -129,7 +129,7 @@ public:
 	 * For example themeVariable("primaryColor") may return "#ac2300".
 	 * Returns an empty string, if the given theme variable does not exist.
 	 */
-	QString themeVariable(const QString& VariableId) const;
+	QString themeVariableValue(const QString& VariableId) const;
 
 	/**
 	 * You can use this function to add or overwrite a theme variable.
@@ -139,7 +139,14 @@ public:
 	 * should call updateStylesheet() to request a reprocessing of the style
 	 * template and to update the stylesheet.
 	 */
-	void setThemeVariabe(const QString& VariableId, const QString& Value);
+	void setThemeVariabeValue(const QString& VariableId, const QString& Value);
+
+	/**
+	 * Returns the color for the given VariableId.
+	 * If VariableId is not a color variable, then this function returns an invalid
+	 * QColor.
+	 */
+	QColor themeColor(const QString& VariableId) const;
 
 	/**
 	 * Returns the current set theme
