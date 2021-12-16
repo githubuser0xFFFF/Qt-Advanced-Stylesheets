@@ -54,19 +54,19 @@ Have look into the file `CMainWindow` in the full_features example to learn
 ho to use the `CStyleManager`. Here are the basic steps to add the style
 manager to your application:
 
-```c++
+```cpp
 QString AppDir = qApp->applicationDirPath();
 CStyleManager StyleManager;
 
 // first set the directory that contains all your styles
 StyleManager.setStylesDirPath(AppDir + "/../../styles");
 
-// now set the output forlder where the processes styles are stored. The
-// manager will create a sub directory for each style
+// now set the output folder where the processed styles are stored. The
+// style manager will create a sub directory for each style
 StyleManager.setOutputDirPath(AppDir + "/output");
 
 // set the current style and select a theme. After these two calls, the output
-// folder will contains the generated resoruces and stylesheet
+// folder will contains the generated resoruces and stylesheet.
 StyleManager.setCurrentStyle("qt_material");
 StyleManager.setCurrentTheme("dark_teal");
 
