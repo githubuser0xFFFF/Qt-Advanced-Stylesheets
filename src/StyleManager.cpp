@@ -72,7 +72,9 @@ static QPalette::ColorRole colorRoleFromString(const QString& Text)
          {"NoRole", QPalette::NoRole},
          {"ToolTipBase", QPalette::ToolTipBase},
          {"ToolTipText", QPalette::ToolTipText},
-         {"PlaceholderText", QPalette::PlaceholderText},
+#if QT_VERSION >= 0x050C00
+         {"PlaceholderText", QPalette::PlaceholderText}
+#endif
 	};
 
 	return ColorRoleMap.value(Text, QPalette::NoRole);
