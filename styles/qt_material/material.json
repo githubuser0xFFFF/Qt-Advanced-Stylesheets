@@ -1,6 +1,7 @@
 {
     "name" : "material",
     "icon" : "material_icon.svg",
+    "css_template" : "material.css.template",
     
     "variables" : {
         "font_family" : "Roboto",

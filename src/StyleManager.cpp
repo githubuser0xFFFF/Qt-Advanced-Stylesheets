@@ -24,9 +24,78 @@
 #include <QJsonArray>
 #include <QIcon>
 #include <QApplication>
+#include <QPalette>
+#include <QStyle>
 
 namespace acss
 {
+struct PaletteColorEntry
+{
+	QPalette::ColorGroup Group;
+	QPalette::ColorRole Role;
+	QString ColorVariable;
+
+	PaletteColorEntry(QPalette::ColorGroup group = QPalette::Active,
+		QPalette::ColorRole role = QPalette::NoRole,
+		const QString& variable = QString())
+		: Group(group), Role(role), ColorVariable(variable) {}
+
+	bool isValid() const
+	{
+		return !ColorVariable.isEmpty() && Role != QPalette::NoRole;
+	}
+};
+
+/**
+ * Converts a color role string into a color role enum
+ */
+static QPalette::ColorRole colorRoleFromString(const QString& Text)
+{
+	static QMap<QString, QPalette::ColorRole> ColorRoleMap =
+		{{"WindowText", QPalette::WindowText},
+		 {"Button", QPalette::Button},
+		 {"Light", QPalette::Light},
+		 {"Midlight", QPalette::Midlight},
+		 {"Dark", QPalette::Dark},
+		 {"Mid", QPalette::Mid},
+		 {"Text", QPalette::Text},
+		 {"BrightText", QPalette::BrightText},
+		 {"ButtonTextd", QPalette::ButtonText},
+		 {"Base", QPalette::Base},
+		 {"Window", QPalette::Window},
+		 {"Shadow", QPalette::Shadow},
+		 {"Highlight", QPalette::Highlight},
+		 {"HighlightedText", QPalette::HighlightedText},
+		 {"Link", QPalette::Link},
+		 {"LinkVisited", QPalette::LinkVisited},
+		 {"AlternateBase", QPalette::AlternateBase},
+         {"NoRole", QPalette::NoRole},
+         {"ToolTipBase", QPalette::ToolTipBase},
+         {"ToolTipText", QPalette::ToolTipText},
+         {"PlaceholderText", QPalette::PlaceholderText},
+	};
+
+	return ColorRoleMap.value(Text, QPalette::NoRole);
+}
+
+/**
+ * Returns the color group string for a given QPalette::ColorGroup
+ */
+static QString colorGroupString(QPalette::ColorGroup ColorGroup)
+{
+	switch (ColorGroup)
+	{
+	case QPalette::Active: return "active";
+	case QPalette::Disabled: return "disabled";
+	case QPalette::Inactive: return "inactive";
+	default:
+		return QString();
+	}
+
+	return QString();
+}
+
+
 /**
  * Private data class of CAdvancedStylesheet class (pimpl)
  */
@@ -44,6 +113,8 @@ struct StyleManagerPrivate
 	QString StyleName;
 	QString IconFile;
 	QVector<QStringPair> ResourceReplaceList;
+	QVector<PaletteColorEntry> PaletteColors;
+	QString PaletteBaseColor;
 	QJsonObject JsonStyleParam;
 	QString ErrorString;
 	CStyleManager::eError Error;
@@ -64,7 +135,12 @@ struct StyleManagerPrivate
 	/**
 	 * Export the internal generated stylesheet
 	 */
-	void exportStylesheet(const QString& Filename);
+	bool exportInternalStylesheet(const QString& Filename);
+
+	/**
+	 * Store the given stylesheet
+	 */
+	bool storeStylesheet(const QString& Stylesheet, const QString& Filename);
 
 	/**
 	 * Parse a list of theme variables
@@ -99,11 +175,6 @@ struct StyleManagerPrivate
 	void addFonts(QDir* Dir = nullptr);
 
 	/**
-	 * Generate the required icons for this theme
-	 */
-	bool generateResources();
-
-	/**
 	 * Generate the resources for the variuous states
 	 */
 	bool generateResourcesFor(const QString& SubDir,
@@ -128,6 +199,16 @@ struct StyleManagerPrivate
 	{
 		setError(CStyleManager::NoError, QString());
 	}
+
+	/**
+	 * Parse palette from JSON file
+	 */
+	void parsePaletteFromJson();
+
+	/**
+	 * Parse palette color group from the given palette json parameters
+	 */
+	void parsePaletteColorGroup(QJsonObject& jPalette, QPalette::ColorGroup ColorGroup);
 };// struct AdvancedStylesheetPrivate
 
 
@@ -202,34 +283,39 @@ void StyleManagerPrivate::replaceStylesheetVariables(QString& Content)
 //============================================================================
 bool StyleManagerPrivate::generateStylesheet()
 {
-	QDir Dir(_this->currentStylePath());
-	auto TemplateFiles = Dir.entryInfoList({"*.template"}, QDir::Files);
-	if (TemplateFiles.count() < 1)
+	auto CssTemplateFileName = JsonStyleParam.value("css_template").toString();
+	if (CssTemplateFileName.isEmpty())
 	{
-		setError(CStyleManager::CssTemplateError, "Stylesheet folder "
-			"does not contain a *.template file");
 		return false;
 	}
 
-	if (TemplateFiles.count() > 1)
+	QString TemplateFilePath = _this->currentStylePath() + "/" + CssTemplateFileName;
+	if (!QFile::exists(TemplateFilePath))
 	{
 		setError(CStyleManager::CssTemplateError, "Stylesheet folder "
-			"contains multiple *.template files");
+			"does not contain the CSS template file " + CssTemplateFileName);
 		return false;
 	}
 
-	QFile TemplateFile(TemplateFiles[0].absoluteFilePath());
+	QFile TemplateFile(_this->currentStylePath() + "/" + CssTemplateFileName);
 	TemplateFile.open(QIODevice::ReadOnly);
 	QString Content(TemplateFile.readAll());
 	replaceStylesheetVariables(Content);
 	Stylesheet = Content;
-	exportStylesheet(TemplateFiles[0].baseName() + ".css");
+	exportInternalStylesheet(QFileInfo(TemplateFilePath).baseName() + ".css");
 	return true;
 }
 
 
 //============================================================================
-void StyleManagerPrivate::exportStylesheet(const QString& Filename)
+bool StyleManagerPrivate::exportInternalStylesheet(const QString& Filename)
+{
+	return storeStylesheet(this->Stylesheet, Filename);
+}
+
+
+//============================================================================
+bool StyleManagerPrivate::storeStylesheet(const QString& Stylesheet, const QString& Filename)
 {
 	auto OutputPath = _this->currentStyleOutputPath();
 	QDir().mkpath(OutputPath);
@@ -239,10 +325,11 @@ void StyleManagerPrivate::exportStylesheet(const QString& Filename)
 	{
 		setError(CStyleManager::CssExportError, "Exporting stylesheet "
 			+ Filename + " caused error: " + OutputFile.errorString());
-		return;
+		return false;
 	}
 	OutputFile.write(Stylesheet.toUtf8());
 	OutputFile.close();
+	return true;
 }
 
 
@@ -391,8 +478,53 @@ bool StyleManagerPrivate::parseStyleJsonFile()
 
 	StyleVariables = Variables;
 	IconFile = json.value("icon").toString();
+	parsePaletteFromJson();
 
 	return true;
+}
+
+
+//============================================================================
+void StyleManagerPrivate::parsePaletteFromJson()
+{
+	PaletteBaseColor = QString();
+	PaletteColors.clear();
+	auto jPalette = JsonStyleParam.value("palette").toObject();
+	if (jPalette.isEmpty())
+	{
+		return;
+	}
+
+	PaletteBaseColor = jPalette.value("base_color").toString();
+	parsePaletteColorGroup(jPalette, QPalette::Active);
+	parsePaletteColorGroup(jPalette, QPalette::Disabled);
+	parsePaletteColorGroup(jPalette, QPalette::Inactive);
+}
+
+
+//============================================================================
+void StyleManagerPrivate::parsePaletteColorGroup(QJsonObject& jPalette, QPalette::ColorGroup ColorGroup)
+{
+	auto jColorGroup = jPalette.value(colorGroupString(ColorGroup)).toObject();
+	if (jColorGroup.isEmpty())
+	{
+		return;
+	}
+
+	for (auto itc = jColorGroup.constBegin(); itc != jColorGroup.constEnd(); ++itc)
+	{
+		auto ColorRole = colorRoleFromString(itc.key());
+		if (QPalette::NoRole == ColorRole)
+		{
+			continue;
+		}
+
+		this->PaletteColors.append({ColorGroup, ColorRole, itc.value().toString()});
+		if (ColorGroup != QPalette::Active)
+		{
+			continue;
+		}
+	}
 }
 
 
@@ -456,42 +588,6 @@ bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 
 
 //============================================================================
-bool StyleManagerPrivate::generateResources()
-{
-	QDir ResourceDir(_this->path(CStyleManager::ResourceTemplatesLocation));
-	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
-
-	auto jresources = JsonStyleParam.value("resources").toObject();
-	if (jresources.isEmpty())
-	{
-		setError(CStyleManager::StyleJsonError, "Key resources "
-			"missing in style json file");
-		return false;
-	}
-
-	// Process all resource generation variants
-	bool Result = true;
-	for (auto itc = jresources.constBegin(); itc != jresources.constEnd(); ++itc)
-	{
-		auto Param = itc.value().toObject();
-		if (Param.isEmpty())
-		{
-			setError(CStyleManager::StyleJsonError, "Key resources "
-				"missing in style json file");
-			Result = false;
-			continue;
-		}
-		if (!generateResourcesFor(itc.key(), Param, Entries))
-		{
-			Result = false;
-		}
-	}
-
-	return Result;
-}
-
-
-//============================================================================
 CStyleManager::CStyleManager(QObject* parent) :
 	QObject(parent),
 	d(new StyleManagerPrivate(this))
@@ -536,6 +632,7 @@ bool CStyleManager::setCurrentStyle(const QString& Style)
 	}
 	auto Result = d->parseStyleJsonFile();
 	QDir::addSearchPath("icon", currentStyleOutputPath());
+	d->addFonts();
 	emit currentStyleChanged(d->CurrentStyle);
 	emit stylesheetChanged();
 	return Result;
@@ -624,15 +721,7 @@ bool CStyleManager::setCurrentTheme(const QString& Theme)
 	}
 
 	d->CurrentTheme = Theme;
-	d->addFonts();
-	if (!d->generateStylesheet())
-	{
-		return false;
-	}
-	d->generateResources();
-
 	emit currentThemeChanged(d->CurrentTheme);
-	emit stylesheetChanged();
 	return true;
 }
 
@@ -640,14 +729,27 @@ bool CStyleManager::setCurrentTheme(const QString& Theme)
 //============================================================================
 bool CStyleManager::updateStylesheet()
 {
-	if (!d->generateStylesheet())
+	if (!processStyleTemplate())
 	{
 		return false;
 	}
 
-	d->generateResources();
+	if (!d->generateStylesheet() && (error() != CStyleManager::NoError))
+	{
+		return false;
+	}
+
 	emit stylesheetChanged();
 	return true;
+}
+
+
+
+//============================================================================
+bool CStyleManager::processStyleTemplate()
+{
+	updateApplicationPaletteColors();
+	return generateResources();
 }
 
 
@@ -692,10 +794,15 @@ const QStringList& CStyleManager::themes() const
 
 
 //============================================================================
-QString CStyleManager::processStylesheetTemplate(const QString& Template)
+QString CStyleManager::processStylesheetTemplate(const QString& Template,
+	const QString& OutputFile)
 {
 	auto Stylesheet = Template;
 	d->replaceStylesheetVariables(Stylesheet);
+	if (!OutputFile.isEmpty())
+	{
+		d->storeStylesheet(Stylesheet, OutputFile);
+	}
 	return Stylesheet;
 }
 
@@ -732,6 +839,82 @@ QString CStyleManager::path(eLocation Location) const
 	}
 
 	return QString();
+}
+
+
+//============================================================================
+bool CStyleManager::generateResources()
+{
+	QDir ResourceDir(path(CStyleManager::ResourceTemplatesLocation));
+	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
+
+	auto jresources = d->JsonStyleParam.value("resources").toObject();
+	if (jresources.isEmpty())
+	{
+		d->setError(CStyleManager::StyleJsonError, "Key resources "
+			"missing in style json file");
+		return false;
+	}
+
+	// Process all resource generation variants
+	bool Result = true;
+	for (auto itc = jresources.constBegin(); itc != jresources.constEnd(); ++itc)
+	{
+		auto Param = itc.value().toObject();
+		if (Param.isEmpty())
+		{
+			d->setError(CStyleManager::StyleJsonError, "Key resources "
+				"missing in style json file");
+			Result = false;
+			continue;
+		}
+		if (!d->generateResourcesFor(itc.key(), Param, Entries))
+		{
+			Result = false;
+		}
+	}
+
+	return Result;
+}
+
+
+//============================================================================
+QPalette CStyleManager::generateThemePalette() const
+{
+	QPalette Palette = qApp->palette();
+	if (!d->PaletteBaseColor.isEmpty())
+	{
+		auto Color = themeColor(d->PaletteBaseColor);
+		if (Color.isValid())
+		{
+			Palette = QPalette(Color);
+		}
+	}
+
+	for (const auto& Entry : d->PaletteColors)
+	{
+		auto Color = themeColor(Entry.ColorVariable);
+		if (Color.isValid())
+		{
+			Palette.setColor(Entry.Group, Entry.Role, themeColor(Entry.ColorVariable));
+		}
+	}
+
+	return Palette;
+}
+
+
+//============================================================================
+void CStyleManager::updateApplicationPaletteColors()
+{
+	qApp->setPalette(generateThemePalette());
+}
+
+
+//============================================================================
+const QJsonObject& CStyleManager::styleParameters() const
+{
+	return d->JsonStyleParam;
 }
 
 } // namespace acss

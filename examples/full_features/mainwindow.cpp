@@ -113,6 +113,7 @@ CMainWindow::CMainWindow(QWidget *parent)
     d->StyleManager->setOutputDirPath(AppDir + "/output");
     d->StyleManager->setCurrentStyle("qt_material");
     d->StyleManager->setCurrentTheme("dark_teal");
+    d->StyleManager->updateStylesheet();
     setWindowIcon(d->StyleManager->styleIcon());
     qApp->setStyleSheet(d->StyleManager->styleSheet());
     connect(d->StyleManager, SIGNAL(stylesheetChanged()), this,
