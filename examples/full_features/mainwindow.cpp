@@ -134,6 +134,7 @@ void CMainWindow::onThemeActionTriggered()
 {
 	auto Action = qobject_cast<QAction*>(sender());
 	d->StyleManager->setCurrentTheme(Action->text());
+	d->StyleManager->updateStylesheet();
 }
 
 
