@@ -80,6 +80,21 @@ static QPalette::ColorRole colorRoleFromString(const QString& Text)
 	return ColorRoleMap.value(Text, QPalette::NoRole);
 }
 
+
+template <class Key, class T>
+static void insertIntoMap(QMap<Key, T>& Map, const QMap<Key, T> &map)
+{
+#if QT_VERSION >= 0x050F00
+    Map.insert(map);
+#else
+    for (auto itc = map.constBegin(); itc != map.constEnd(); ++itc)
+    {
+        Map.insert(itc.key(), itc.value());
+    }
+#endif
+}
+
+
 /**
  * Returns the color group string for a given QPalette::ColorGroup
  */
@@ -424,7 +439,7 @@ bool StyleManagerPrivate::parseThemeFile(const QString& Theme)
     QMap<QString, QString> ColorVariables;
 	parseVariablesFromXml(s, "color", ColorVariables);
 	this->ThemeVariables = this->StyleVariables;
-	this->ThemeVariables.insert(ColorVariables);
+        insertIntoMap(this->ThemeVariables, ColorVariables);
 	this->ThemeColors = ColorVariables;
 	return true;
 }

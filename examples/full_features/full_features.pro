@@ -23,6 +23,8 @@ FORMS += \
     
 RESOURCES += full_features.qrc
 
+DEFINES += "STYLES_DIR=$$PWD/../../styles"
+
 
 LIBS += -L$${ACSS_OUT_ROOT}/lib
 include(../../acss.pri)

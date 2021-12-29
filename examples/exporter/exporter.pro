@@ -19,6 +19,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += exporter.cpp
 
+DEFINES += "STYLES_DIR=$$PWD/../../styles"
+
 
 LIBS += -L$${ACSS_OUT_ROOT}/lib
 include(../../acss.pri)

@@ -11,9 +11,13 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QColorDialog>
+#include <QDebug>
 
 #include <iostream>
 
+
+#define _STR(x) #x
+#define STRINGIFY(x)  _STR(x)
 
 /**
  * Private data class - pimpl
@@ -108,8 +112,9 @@ CMainWindow::CMainWindow(QWidget *parent)
     d->ui.setupUi(this);
 
     QString AppDir = qApp->applicationDirPath();
+    QString StylesDir = STRINGIFY(STYLES_DIR);
     d->StyleManager = new acss::CStyleManager(this);
-    d->StyleManager->setStylesDirPath(AppDir + "/../../styles");
+    d->StyleManager->setStylesDirPath(StylesDir);
     d->StyleManager->setOutputDirPath(AppDir + "/output");
     d->StyleManager->setCurrentStyle("qt_material");
     d->StyleManager->setCurrentTheme("dark_teal");
