@@ -38,7 +38,7 @@
             "Button" : "",
             "ButtonText" : "",
             "BrightText" : "",
-            "Light" : "",
+            "Light" : "secondaryColor",
             "Midlight" : "",
             "Dark" : "",
             "Mid" : "",
