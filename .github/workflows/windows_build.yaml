@@ -15,3 +15,4 @@ jobs:
         msystem: mingw64
         install: gcc make mingw-w64-x86_64-qt5
     - run: gcc -v
+    - run: qmake -v
