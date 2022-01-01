@@ -1,6 +1,9 @@
-name: windows_build
+name: windows-build
+
+on: [push]
+
 jobs:
-  windows_build:
+  build:
     runs-on: windows-2019
     defaults:
       run:
