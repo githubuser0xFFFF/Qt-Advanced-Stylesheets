@@ -13,5 +13,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: gcc make mingw-w64-qt5
+        install: >-
+          base-devel
+          git
     - run: gcc -v
