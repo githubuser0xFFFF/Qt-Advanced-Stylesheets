@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/full_features">
         <file>images/logo_frame.svg</file>
+        <file>qml/simple_demo.qml</file>
     </qresource>
 </RCC>
