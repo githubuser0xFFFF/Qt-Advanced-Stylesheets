@@ -35,14 +35,16 @@ And light:
 
 ## Navigation
 
-- [Navigation](#navigation)
-- [Build](#build)
-- [Getting started](#getting-started)
-- [Run examples](#run-examples)
-- [Future Plans](#future-plans)
-- [License information](#license-information)
-- [Credits](#credits)
-- [Donation](#donation)
+- [Qt-Advanced-Stylesheets](#qt-advanced-stylesheets)
+  - [Navigation](#navigation)
+  - [Build](#build)
+  - [Getting started](#getting-started)
+  - [Run examples](#run-examples)
+  - [Usage in QML](#usage-in-qml)
+  - [Future Plans](#future-plans)
+  - [License information](#license-information)
+  - [Credits](#credits)
+  - [Donation](#donation)
 
 ## Build
 
@@ -82,6 +84,43 @@ themes and create new ones.
 
 ![theme](doc/theme.gif)
 
+## Usage in QML
+This project can also be used with QML applications. In addition to the steps 
+described in the [previous paragraph](#getting-started) you need to register the 
+provided `CQmlStyleUrlInterceptor` to the QML Engine you're using.
+
+Let's say you have your `CStyleManager` instance and a `QQuickWidget` that 
+displays your QML content. The only thing you need to do now is the following:
+```cpp
+acss::CStyleManager* StyleManager = new acss::CStyleManager;
+
+QQuickWidget Widget;
+Widget.engine()->setUrlInterceptor(new CQmlStyleUrlInterceptor(StyleManager));
+```
+
+And that's it. Now you can use all of the icons provided by the style manager as
+you would in your C++ code:
+```qml
+CheckBox {
+    id: checkBox
+
+    indicator: Rectangle {
+        implicitHeight: 26
+        implicitWidth: 26
+        x: checkBox.leftPadding
+        y: checkBox.height / 2 - height / 2
+        Image {
+            source: checkBox.checked ? "icon:/primary/checkbox_checked.svg" :
+                                        "icon:/primary/checkbox_unchecked.svg"
+            // Important: Disable caching because otherwise you won't see any changes
+            cache: false
+        }
+    }
+}
+```
+
+Check the `full_features` example to see this in action.
+
 ## Future Plans
 
 The idea is to merge my [QtFluentDesign](https://github.com/githubuser0xFFFF/QtFluentDesign) project into this project to create a nice Windows 11 style that can dynamically
@@ -93,7 +132,7 @@ adapt to the Windows accent color and to the Window dark and light theme.
 
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 This project uses the [LGPLv2.1 license](gnu-lgpl-v2.1.md) for the source code.
-The stylesheets use individal licenses which are located in the directory of
+The stylesheets use individual licenses which are located in the directory of
 the corresponding style.
 
 ## Credits
@@ -101,7 +140,7 @@ the corresponding style.
 - Uwe Kindler, Project Maintainer
 - [GCPDS](https://github.com/UN-GCPDS) - Grupo de control y procesamiento digital de señales
 
-The project is strongy inspired by the great [Qt-material](https://github.com/UN-GCPDS/qt-material) project from [GCPDS](https://github.com/UN-GCPDS) and uses the qt-material stylesheet from this project.
+The project is strongly inspired by the great [Qt-material](https://github.com/UN-GCPDS/qt-material) project from [GCPDS](https://github.com/UN-GCPDS) and uses the qt-material stylesheet from this project.
 
 ## Donation
 

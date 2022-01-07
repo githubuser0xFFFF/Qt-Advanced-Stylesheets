@@ -1,8 +1,9 @@
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include <StyleManager.h>
+#include <QmlStyleUrlInterceptor.h>
 
-#include "ui_mainwindow.h"
+#include "ui_MainWindow.h"
 #include <QDir>
 #include <QApplication>
 #include <QAction>
@@ -12,6 +13,7 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QDebug>
+#include <QQmlEngine>
 
 #include <iostream>
 
@@ -37,7 +39,9 @@ struct MainWindowPrivate
 	void createThemeColorDockWidget();
 	void fillThemeMenu();
 	void setSomeIcons();
+	void setupQuickWidget();
 	void updateThemeColorButtons();
+	void updateQuickWidget();
 };
 
 
@@ -79,6 +83,16 @@ void MainWindowPrivate::updateThemeColorButtons()
 }
 
 
+void MainWindowPrivate::updateQuickWidget()
+{
+	const auto Source = ui.quickWidget->source();
+	ui.quickWidget->setSource({});
+	ui.quickWidget->engine()->clearComponentCache();
+	ui.quickWidget->setSource(Source);
+	ui.quickWidget->setStyleSheet(StyleManager->styleSheet());
+}
+
+
 
 void MainWindowPrivate::fillThemeMenu()
 {
@@ -104,6 +118,14 @@ void MainWindowPrivate::setSomeIcons()
     }
 }
 
+void MainWindowPrivate::setupQuickWidget()
+{
+    ui.quickWidget->engine()->setUrlInterceptor(
+        new acss::CQmlStyleUrlInterceptor(StyleManager));
+    ui.quickWidget->setStyleSheet(StyleManager->styleSheet());
+    ui.quickWidget->setSource(QUrl("qrc:/full_features/qml/simple_demo.qml"));
+}
+
 
 CMainWindow::CMainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -127,6 +149,7 @@ CMainWindow::CMainWindow(QWidget *parent)
     d->createThemeColorDockWidget();
     d->fillThemeMenu();
     d->setSomeIcons();
+    d->setupQuickWidget();
 }
 
 CMainWindow::~CMainWindow()
@@ -147,6 +170,7 @@ void CMainWindow::onStyleManagerStylesheetChanged()
 {
 	qApp->setStyleSheet(d->StyleManager->styleSheet());
 	d->updateThemeColorButtons();
+	d->updateQuickWidget();
 }
 
 

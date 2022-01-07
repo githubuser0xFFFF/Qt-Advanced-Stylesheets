@@ -5,7 +5,7 @@ TARGET = $$qtLibraryTarget(qtadvancedcss)
 DEFINES += QT_DEPRECATED_WARNINGS
 TEMPLATE = lib
 DESTDIR = $${ACSS_OUT_ROOT}/lib
-QT += core gui widgets
+QT += core gui widgets qml
 
 !acssBuildStatic {
 	CONFIG += shared
@@ -30,10 +30,12 @@ windows {
 #RESOURCES += ads.qrc
 
 HEADERS += \
+	QmlStyleUrlInterceptor.h \
 	StyleManager.h
 
 
 SOURCES += \
+	QmlStyleUrlInterceptor.cpp \
 	StyleManager.cpp
 
 
