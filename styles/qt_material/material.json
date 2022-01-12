@@ -2,7 +2,7 @@
     "name" : "material",
     "icon" : "material_icon.svg",
     "css_template" : "material.css.template",
-    
+
     "variables" : {
         "font_family" : "Roboto",
         "font_size" : "12px",
@@ -28,15 +28,15 @@
     "palette" : {
         "active" : {
             "Window" : "",
-            "WindowText" : "",
+            "WindowText" : "secondaryTextColor",
             "Base" : "",
             "AlternateBase" : "",
             "ToolTipBase" : "",
             "ToolTipText" : "",
             "PlaceholderText" : "",
-            "Text" : "",
+            "Text" : "secondaryTextColor",
             "Button" : "",
-            "ButtonText" : "",
+            "ButtonText" : "secondaryTextColor",
             "BrightText" : "",
             "Light" : "secondaryColor",
             "Midlight" : "",
