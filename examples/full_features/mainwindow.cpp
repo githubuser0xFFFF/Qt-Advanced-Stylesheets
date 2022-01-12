@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 
-#include <StyleManager.h>
+#include <QtAdvancedStylesheet.h>
 #include <QmlStyleUrlInterceptor.h>
 
 #include "ui_MainWindow.h"
@@ -28,7 +28,7 @@ struct MainWindowPrivate
 {
 	CMainWindow* _this;
 	Ui::MainWindow ui;
-	acss::CStyleManager* StyleManager;
+	acss::QtAdvancedStylesheet* AdvancedStyleSheet;
 	QVector<QPushButton*> ThemeColorButtons;
 
 	/**
@@ -57,7 +57,7 @@ void MainWindowPrivate::createThemeColorDockWidget()
 	_this->addDockWidget(Qt::LeftDockWidgetArea, dock);
 	dock->setFloating(true);
 
-	const auto& ThemeColors = StyleManager->themeColorVariables();
+	const auto& ThemeColors = AdvancedStyleSheet->themeColorVariables();
 	for (auto itc = ThemeColors.constBegin(); itc != ThemeColors.constEnd(); ++itc)
 	{
 		auto Button = new QPushButton(itc.key());
@@ -74,7 +74,7 @@ void MainWindowPrivate::updateThemeColorButtons()
 {
 	for (auto Button : ThemeColorButtons)
 	{
-		auto Color = StyleManager->themeColor(Button->text());
+		auto Color = AdvancedStyleSheet->themeColor(Button->text());
 		QString TextColor = (Color.value() < 128) ? "#ffffff" : "#000000";
 		QString ButtonStylesheet = QString("background-color: %1; color: %2;"
 			"border: none;").arg(Color.name()).arg(TextColor);
@@ -89,7 +89,7 @@ void MainWindowPrivate::updateQuickWidget()
 	ui.quickWidget->setSource({});
 	ui.quickWidget->engine()->clearComponentCache();
 	ui.quickWidget->setSource(Source);
-	ui.quickWidget->setStyleSheet(StyleManager->styleSheet());
+	ui.quickWidget->setStyleSheet(AdvancedStyleSheet->styleSheet());
 }
 
 
@@ -98,7 +98,7 @@ void MainWindowPrivate::fillThemeMenu()
 {
     // Add actions for theme selection
     auto m = ui.menuThemes;
-    for (const auto& Theme : StyleManager->themes())
+    for (const auto& Theme : AdvancedStyleSheet->themes())
     {
     	QAction* a = new QAction(Theme);
     	m->addAction(a);
@@ -110,7 +110,7 @@ void MainWindowPrivate::fillThemeMenu()
 
 void MainWindowPrivate::setSomeIcons()
 {
-    ui.actionToolbar->setIcon(StyleManager->styleIcon());
+    ui.actionToolbar->setIcon(AdvancedStyleSheet->styleIcon());
     QIcon Icon(":/full_features/images/logo_frame.svg");
     for (int i = 0; i < ui.listWidget_2->count(); ++i)
     {
@@ -121,8 +121,8 @@ void MainWindowPrivate::setSomeIcons()
 void MainWindowPrivate::setupQuickWidget()
 {
     ui.quickWidget->engine()->setUrlInterceptor(
-        new acss::CQmlStyleUrlInterceptor(StyleManager));
-    ui.quickWidget->setStyleSheet(StyleManager->styleSheet());
+        new acss::CQmlStyleUrlInterceptor(AdvancedStyleSheet));
+    ui.quickWidget->setStyleSheet(AdvancedStyleSheet->styleSheet());
     ui.quickWidget->setSource(QUrl("qrc:/full_features/qml/simple_demo.qml"));
 }
 
@@ -135,15 +135,15 @@ CMainWindow::CMainWindow(QWidget *parent)
 
     QString AppDir = qApp->applicationDirPath();
     QString StylesDir = STRINGIFY(STYLES_DIR);
-    d->StyleManager = new acss::CStyleManager(this);
-    d->StyleManager->setStylesDirPath(StylesDir);
-    d->StyleManager->setOutputDirPath(AppDir + "/output");
-    d->StyleManager->setCurrentStyle("qt_material");
-    d->StyleManager->setCurrentTheme("dark_teal");
-    d->StyleManager->updateStylesheet();
-    setWindowIcon(d->StyleManager->styleIcon());
-    qApp->setStyleSheet(d->StyleManager->styleSheet());
-    connect(d->StyleManager, SIGNAL(stylesheetChanged()), this,
+    d->AdvancedStyleSheet = new acss::QtAdvancedStylesheet(this);
+    d->AdvancedStyleSheet->setStylesDirPath(StylesDir);
+    d->AdvancedStyleSheet->setOutputDirPath(AppDir + "/output");
+    d->AdvancedStyleSheet->setCurrentStyle("qt_material");
+    d->AdvancedStyleSheet->setCurrentTheme("dark_teal");
+    d->AdvancedStyleSheet->updateStylesheet();
+    setWindowIcon(d->AdvancedStyleSheet->styleIcon());
+    qApp->setStyleSheet(d->AdvancedStyleSheet->styleSheet());
+    connect(d->AdvancedStyleSheet, SIGNAL(stylesheetChanged()), this,
     	SLOT(onStyleManagerStylesheetChanged()));
 
     d->createThemeColorDockWidget();
@@ -161,14 +161,14 @@ CMainWindow::~CMainWindow()
 void CMainWindow::onThemeActionTriggered()
 {
 	auto Action = qobject_cast<QAction*>(sender());
-	d->StyleManager->setCurrentTheme(Action->text());
-	d->StyleManager->updateStylesheet();
+	d->AdvancedStyleSheet->setCurrentTheme(Action->text());
+	d->AdvancedStyleSheet->updateStylesheet();
 }
 
 
 void CMainWindow::onStyleManagerStylesheetChanged()
 {
-	qApp->setStyleSheet(d->StyleManager->styleSheet());
+	qApp->setStyleSheet(d->AdvancedStyleSheet->styleSheet());
 	d->updateThemeColorButtons();
 	d->updateQuickWidget();
 }
@@ -178,14 +178,14 @@ void CMainWindow::onThemeColorButtonClicked()
 {
 	auto Button = qobject_cast<QPushButton*>(sender());
 	QColorDialog ColorDialog;
-	auto Color = d->StyleManager->themeColor(Button->text());
+	auto Color = d->AdvancedStyleSheet->themeColor(Button->text());
 	ColorDialog.setCurrentColor(Color);
 	if (ColorDialog.exec() != QDialog::Accepted)
 	{
 		return;
 	}
 	Color = ColorDialog.currentColor();
-	d->StyleManager->setThemeVariableValue(Button->text(), Color.name());
-	d->StyleManager->updateStylesheet();
+	d->AdvancedStyleSheet->setThemeVariableValue(Button->text(), Color.name());
+	d->AdvancedStyleSheet->updateStylesheet();
 }
 

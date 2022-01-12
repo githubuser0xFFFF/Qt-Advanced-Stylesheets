@@ -31,12 +31,12 @@ windows {
 
 HEADERS += \
 	QmlStyleUrlInterceptor.h \
-	StyleManager.h
+	QtAdvancedStylesheet.h
 
 
 SOURCES += \
 	QmlStyleUrlInterceptor.cpp \
-	StyleManager.cpp
+	QtAdvancedStylesheet.cpp
 
 
 isEmpty(PREFIX){

@@ -1,4 +1,4 @@
-#include <StyleManager.h>
+#include <QtAdvancedStylesheet.h>
 #include <QCoreApplication>
 #include <QDir>
 
@@ -12,11 +12,11 @@ using namespace acss;
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    CStyleManager StyleManager;
+    QtAdvancedStylesheet AdvancedStylesheet;
     QString AppDir = qApp->applicationDirPath();
     QString StylesDir = STRINGIFY(STYLES_DIR);
-    StyleManager.setStylesDirPath(StylesDir);
-    StyleManager.setOutputDirPath(AppDir + "/output");
-    StyleManager.setCurrentStyle("qt_material");
-    StyleManager.setCurrentTheme("dark_teal");
+    AdvancedStylesheet.setStylesDirPath(StylesDir);
+    AdvancedStylesheet.setOutputDirPath(AppDir + "/output");
+    AdvancedStylesheet.setCurrentStyle("qt_material");
+    AdvancedStylesheet.setCurrentTheme("dark_teal");
 }

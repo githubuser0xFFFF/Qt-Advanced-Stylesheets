@@ -8,8 +8,7 @@
 //============================================================================
 //                                   INCLUDES
 //============================================================================
-#include <StyleManager.h>
-
+#include <QtAdvancedStylesheet.h>
 #include <iostream>
 
 #include <QMap>
@@ -26,6 +25,7 @@
 #include <QApplication>
 #include <QPalette>
 #include <QStyle>
+
 
 namespace acss
 {
@@ -72,28 +72,11 @@ static QPalette::ColorRole colorRoleFromString(const QString& Text)
          {"NoRole", QPalette::NoRole},
          {"ToolTipBase", QPalette::ToolTipBase},
          {"ToolTipText", QPalette::ToolTipText},
-#if QT_VERSION >= 0x050C00
-         {"PlaceholderText", QPalette::PlaceholderText}
-#endif
+         {"PlaceholderText", QPalette::PlaceholderText},
 	};
 
 	return ColorRoleMap.value(Text, QPalette::NoRole);
 }
-
-
-template <class Key, class T>
-static void insertIntoMap(QMap<Key, T>& Map, const QMap<Key, T> &map)
-{
-#if QT_VERSION >= 0x050F00
-    Map.insert(map);
-#else
-    for (auto itc = map.constBegin(); itc != map.constEnd(); ++itc)
-    {
-        Map.insert(itc.key(), itc.value());
-    }
-#endif
-}
-
 
 /**
  * Returns the color group string for a given QPalette::ColorGroup
@@ -116,9 +99,9 @@ static QString colorGroupString(QPalette::ColorGroup ColorGroup)
 /**
  * Private data class of CAdvancedStylesheet class (pimpl)
  */
-struct StyleManagerPrivate
+struct QtAdvancedStylesheetPrivate
 {
-	CStyleManager *_this;
+	QtAdvancedStylesheet *_this;
 	QString StylesDir;
 	QString OutputDir;
 	QMap<QString, QString> StyleVariables;
@@ -127,6 +110,7 @@ struct StyleManagerPrivate
 	QString Stylesheet;
 	QString CurrentStyle;
 	QString CurrentTheme;
+	QString DefaultTheme;
 	QString StyleName;
 	QString IconFile;
 	QVector<QStringPair> ResourceReplaceList;
@@ -134,15 +118,17 @@ struct StyleManagerPrivate
 	QString PaletteBaseColor;
 	QJsonObject JsonStyleParam;
 	QString ErrorString;
-	CStyleManager::eError Error;
+	QtAdvancedStylesheet::eError Error;
 	mutable QIcon Icon;
 	QStringList Styles;
 	QStringList Themes;
+	bool IsDarkTheme = false;
+	mutable tColorReplaceList IconColorReplaceList;
 
 	/**
 	 * Private data constructor
 	 */
-	StyleManagerPrivate(CStyleManager *_public);
+	QtAdvancedStylesheetPrivate(QtAdvancedStylesheet *_public);
 
 	/**
 	 * Generate the final stylesheet from the stylesheet template file
@@ -207,14 +193,14 @@ struct StyleManagerPrivate
 	/**
 	 * Set error code and error string
 	 */
-	void setError(CStyleManager::eError Error, const QString& ErrorString);
+	void setError(QtAdvancedStylesheet::eError Error, const QString& ErrorString);
 
 	/**
 	 * Convenience function to ease clearing the error
 	 */
 	void clearError()
 	{
-		setError(CStyleManager::NoError, QString());
+		setError(QtAdvancedStylesheet::NoError, QString());
 	}
 
 	/**
@@ -226,12 +212,18 @@ struct StyleManagerPrivate
 	 * Parse palette color group from the given palette json parameters
 	 */
 	void parsePaletteColorGroup(QJsonObject& jPalette, QPalette::ColorGroup ColorGroup);
+
+	/**
+	 * Use this function to access the icon color replace list, to ensure, that
+	 * is is properly initialized
+	 */
+	const tColorReplaceList& iconColorReplaceList() const;
 };// struct AdvancedStylesheetPrivate
 
 
 //============================================================================
-StyleManagerPrivate::StyleManagerPrivate(
-    CStyleManager *_public) :
+QtAdvancedStylesheetPrivate::QtAdvancedStylesheetPrivate(
+    QtAdvancedStylesheet *_public) :
 	_this(_public)
 {
 
@@ -239,12 +231,12 @@ StyleManagerPrivate::StyleManagerPrivate(
 
 
 //============================================================================
-void StyleManagerPrivate::setError(CStyleManager::eError Error,
+void QtAdvancedStylesheetPrivate::setError(QtAdvancedStylesheet::eError Error,
 	const QString& ErrorString)
 {
 	this->Error = Error;
 	this->ErrorString = ErrorString;
-	if (Error != CStyleManager::NoError)
+	if (Error != QtAdvancedStylesheet::NoError)
 	{
 		qDebug() << "CAdvancedStylesheet Error: " << Error << " " << ErrorString;
 	}
@@ -252,7 +244,7 @@ void StyleManagerPrivate::setError(CStyleManager::eError Error,
 
 
 //============================================================================
-QString StyleManagerPrivate::rgbaColor(const QString& RgbColor, float Opacity)
+QString QtAdvancedStylesheetPrivate::rgbaColor(const QString& RgbColor, float Opacity)
 {
 	int Alpha = 255 * Opacity;
 	auto RgbaColor = RgbColor;
@@ -262,7 +254,7 @@ QString StyleManagerPrivate::rgbaColor(const QString& RgbColor, float Opacity)
 
 
 //============================================================================
-void StyleManagerPrivate::replaceStylesheetVariables(QString& Content)
+void QtAdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 {
 	static const int OpacityStrSize = QString("opacity(").size();
 
@@ -298,7 +290,7 @@ void StyleManagerPrivate::replaceStylesheetVariables(QString& Content)
 
 
 //============================================================================
-bool StyleManagerPrivate::generateStylesheet()
+bool QtAdvancedStylesheetPrivate::generateStylesheet()
 {
 	auto CssTemplateFileName = JsonStyleParam.value("css_template").toString();
 	if (CssTemplateFileName.isEmpty())
@@ -309,7 +301,7 @@ bool StyleManagerPrivate::generateStylesheet()
 	QString TemplateFilePath = _this->currentStylePath() + "/" + CssTemplateFileName;
 	if (!QFile::exists(TemplateFilePath))
 	{
-		setError(CStyleManager::CssTemplateError, "Stylesheet folder "
+		setError(QtAdvancedStylesheet::CssTemplateError, "Stylesheet folder "
 			"does not contain the CSS template file " + CssTemplateFileName);
 		return false;
 	}
@@ -325,14 +317,14 @@ bool StyleManagerPrivate::generateStylesheet()
 
 
 //============================================================================
-bool StyleManagerPrivate::exportInternalStylesheet(const QString& Filename)
+bool QtAdvancedStylesheetPrivate::exportInternalStylesheet(const QString& Filename)
 {
 	return storeStylesheet(this->Stylesheet, Filename);
 }
 
 
 //============================================================================
-bool StyleManagerPrivate::storeStylesheet(const QString& Stylesheet, const QString& Filename)
+bool QtAdvancedStylesheetPrivate::storeStylesheet(const QString& Stylesheet, const QString& Filename)
 {
 	auto OutputPath = _this->currentStyleOutputPath();
 	QDir().mkpath(OutputPath);
@@ -340,7 +332,7 @@ bool StyleManagerPrivate::storeStylesheet(const QString& Stylesheet, const QStri
 	QFile OutputFile(OutputFilename);
 	if (!OutputFile.open(QIODevice::WriteOnly))
 	{
-		setError(CStyleManager::CssExportError, "Exporting stylesheet "
+		setError(QtAdvancedStylesheet::CssExportError, "Exporting stylesheet "
 			+ Filename + " caused error: " + OutputFile.errorString());
 		return false;
 	}
@@ -351,7 +343,7 @@ bool StyleManagerPrivate::storeStylesheet(const QString& Stylesheet, const QStri
 
 
 //============================================================================
-void StyleManagerPrivate::addFonts(QDir* Dir)
+void QtAdvancedStylesheetPrivate::addFonts(QDir* Dir)
 {
 	// I dont't know, if this is the right way to detect, if there are any
 	// widgets. The call to QFontDatabase::addApplicationFont() will crash, if
@@ -363,7 +355,7 @@ void StyleManagerPrivate::addFonts(QDir* Dir)
 
 	if (!Dir)
 	{
-		QDir FontsDir(_this->path(CStyleManager::FontsLocation));
+		QDir FontsDir(_this->path(QtAdvancedStylesheet::FontsLocation));
 		addFonts(&FontsDir);
 	}
 	else
@@ -387,21 +379,21 @@ void StyleManagerPrivate::addFonts(QDir* Dir)
 
 
 //============================================================================
-bool StyleManagerPrivate::parseVariablesFromXml(
+bool QtAdvancedStylesheetPrivate::parseVariablesFromXml(
 	QXmlStreamReader& s, const QString& TagName, QMap<QString, QString>& Variables)
 {
 	while (s.readNextStartElement())
 	{
 		if (s.name() != TagName)
 		{
-			setError(CStyleManager::ThemeXmlError, "Malformed theme "
+			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme "
 				"file - expected tag <" + TagName + "> instead of " + s.name());
 			return false;
 		}
 		auto Name = s.attributes().value("name");
 		if (Name.isEmpty())
 		{
-			setError(CStyleManager::ThemeXmlError, "Malformed theme file - "
+			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
 				"name attribute missing in <" + TagName + "> tag");
 			return false;
 		}
@@ -409,7 +401,7 @@ bool StyleManagerPrivate::parseVariablesFromXml(
 		auto Value = s.readElementText(QXmlStreamReader::SkipChildElements);
 		if (Value.isEmpty())
 		{
-			setError(CStyleManager::ThemeXmlError, "Malformed theme file - "
+			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
 				"text of <" + TagName + "> tag is empty");
 			return false;
 		}
@@ -422,44 +414,45 @@ bool StyleManagerPrivate::parseVariablesFromXml(
 
 
 //============================================================================
-bool StyleManagerPrivate::parseThemeFile(const QString& Theme)
+bool QtAdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 {
-	QString ThemeFileName = _this->path(CStyleManager::ThemesLocation) + "/" + Theme;
+	QString ThemeFileName = _this->path(QtAdvancedStylesheet::ThemesLocation) + "/" + Theme;
 	QFile ThemeFile(ThemeFileName);
 	ThemeFile.open(QIODevice::ReadOnly);
 	QXmlStreamReader s(&ThemeFile);
 	s.readNextStartElement();
 	if (s.name() != "resources")
 	{
-		setError(CStyleManager::ThemeXmlError, "Malformed theme file - "
+		setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
 			"expected tag <resources> instead of " + s.name());
 		return false;
 	}
 
+	IsDarkTheme = (s.attributes().value("dark").toInt() == 1);
     QMap<QString, QString> ColorVariables;
 	parseVariablesFromXml(s, "color", ColorVariables);
 	this->ThemeVariables = this->StyleVariables;
-        insertIntoMap(this->ThemeVariables, ColorVariables);
+	this->ThemeVariables.insert(ColorVariables);
 	this->ThemeColors = ColorVariables;
 	return true;
 }
 
 
 //============================================================================
-bool StyleManagerPrivate::parseStyleJsonFile()
+bool QtAdvancedStylesheetPrivate::parseStyleJsonFile()
 {
 	QDir Dir(_this->currentStylePath());
 	auto JsonFiles = Dir.entryInfoList({"*.json"}, QDir::Files);
 	if (JsonFiles.count() < 1)
 	{
-		setError(CStyleManager::StyleJsonError, "Stylesheet folder does "
+		setError(QtAdvancedStylesheet::StyleJsonError, "Stylesheet folder does "
 			"not contain a style json file");
 		return false;
 	}
 
 	if (JsonFiles.count() > 1)
 	{
-		setError(CStyleManager::StyleJsonError, "Stylesheet folder "
+		setError(QtAdvancedStylesheet::StyleJsonError, "Stylesheet folder "
 			"contains multiple theme json files");
 		return false;
 	}
@@ -472,7 +465,7 @@ bool StyleManagerPrivate::parseStyleJsonFile()
 	auto JsonDocument = QJsonDocument::fromJson(JsonData, &ParseError);
 	if (JsonDocument.isNull())
 	{
-		setError(CStyleManager::StyleJsonError, "Loading style json file "
+		setError(QtAdvancedStylesheet::StyleJsonError, "Loading style json file "
 			"caused error: " + ParseError.errorString());
 		return false;
 	}
@@ -481,7 +474,7 @@ bool StyleManagerPrivate::parseStyleJsonFile()
 	StyleName = json.value("name").toString();
 	if (StyleName.isEmpty())
 	{
-		setError(CStyleManager::StyleJsonError, "No key \"name\" found "
+		setError(QtAdvancedStylesheet::StyleJsonError, "No key \"name\" found "
 			"in style json file");
 		return false;
 	}
@@ -497,12 +490,20 @@ bool StyleManagerPrivate::parseStyleJsonFile()
 	IconFile = json.value("icon").toString();
 	parsePaletteFromJson();
 
+	DefaultTheme = json.value("default_theme").toString();
+	if (DefaultTheme.isEmpty())
+	{
+		setError(QtAdvancedStylesheet::StyleJsonError, "No key \"default_theme\" found "
+			"in style json file");
+		return false;
+	}
+
 	return true;
 }
 
 
 //============================================================================
-void StyleManagerPrivate::parsePaletteFromJson()
+void QtAdvancedStylesheetPrivate::parsePaletteFromJson()
 {
 	PaletteBaseColor = QString();
 	PaletteColors.clear();
@@ -520,7 +521,7 @@ void StyleManagerPrivate::parsePaletteFromJson()
 
 
 //============================================================================
-void StyleManagerPrivate::parsePaletteColorGroup(QJsonObject& jPalette, QPalette::ColorGroup ColorGroup)
+void QtAdvancedStylesheetPrivate::parsePaletteColorGroup(QJsonObject& jPalette, QPalette::ColorGroup ColorGroup)
 {
 	auto jColorGroup = jPalette.value(colorGroupString(ColorGroup)).toObject();
 	if (jColorGroup.isEmpty())
@@ -546,7 +547,7 @@ void StyleManagerPrivate::parsePaletteColorGroup(QJsonObject& jPalette, QPalette
 
 
 //============================================================================
-void StyleManagerPrivate::replaceColor(QByteArray& Content,
+void QtAdvancedStylesheetPrivate::replaceColor(QByteArray& Content,
 	const QString& TemplateColor, const QString& ThemeColor) const
 {
 	Content.replace(TemplateColor.toLatin1(), ThemeColor.toLatin1());
@@ -554,19 +555,19 @@ void StyleManagerPrivate::replaceColor(QByteArray& Content,
 
 
 //============================================================================
-bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
+bool QtAdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
 	const QJsonObject& JsonObject, const QFileInfoList& Entries)
 {
 	const QString OutputDir = _this->currentStyleOutputPath() + "/" + SubDir;
 	if (!QDir().mkpath(OutputDir))
 	{
-		setError(CStyleManager::ResourceGeneratorError, "Error "
+		setError(QtAdvancedStylesheet::ResourceGeneratorError, "Error "
 			"creating resource output folder: " + OutputDir);
 		return false;
 	}
 
 	// Fill the color replace list with the values read from style json file
-	QVector<QStringPair> ColorReplaceList;
+	tColorReplaceList ColorReplaceList;
 	for (auto it = JsonObject.constBegin(); it != JsonObject.constEnd(); ++it)
 	{
 		auto TemplateColor = it.key();
@@ -587,12 +588,7 @@ bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 		SvgFile.open(QIODevice::ReadOnly);
 		auto Content = SvgFile.readAll();
 		SvgFile.close();
-
-		for (const auto& Replace : ColorReplaceList)
-		{
-			replaceColor(Content, Replace.first, Replace.second);
-		}
-
+		_this->replaceSvgColors(Content, ColorReplaceList);
 		QString OutputFilename = OutputDir + "/" + Entry.fileName();
 		QFile OutputFile(OutputFilename);
 		OutputFile.open(QIODevice::WriteOnly);
@@ -605,23 +601,67 @@ bool StyleManagerPrivate::generateResourcesFor(const QString& SubDir,
 
 
 //============================================================================
-CStyleManager::CStyleManager(QObject* parent) :
+const tColorReplaceList& QtAdvancedStylesheetPrivate::iconColorReplaceList() const
+{
+	if (IconColorReplaceList.count())
+	{
+		return IconColorReplaceList;
+	}
+
+	auto jicon_colors = JsonStyleParam.value("icon_colors").toObject();
+	if (jicon_colors.isEmpty())
+	{
+		return IconColorReplaceList;
+	}
+
+	for (auto it = jicon_colors.constBegin(); it != jicon_colors.constEnd(); ++it)
+	{
+		auto TemplateColor = it.key();
+		auto ThemeColor = it.value().toString();
+		// If the color starts with an hashtag, then we have a real color value
+		// If it does not start with # then it is a theme variable
+		if (!ThemeColor.startsWith('#'))
+		{
+			ThemeColor = _this->themeVariableValue(ThemeColor);
+		}
+		IconColorReplaceList.append({TemplateColor, ThemeColor});
+	}
+
+	return IconColorReplaceList;
+}
+
+
+//============================================================================
+void QtAdvancedStylesheet::replaceSvgColors(QByteArray& SvgContent,
+	const tColorReplaceList& ColorReplaceList)
+{
+	const tColorReplaceList& ReplaceList = ColorReplaceList.isEmpty() ?
+		d->iconColorReplaceList() : ColorReplaceList;
+	for (const auto& Replace : ReplaceList)
+	{
+		d->replaceColor(SvgContent, Replace.first, Replace.second);
+	}
+}
+
+
+//============================================================================
+QtAdvancedStylesheet::QtAdvancedStylesheet(QObject* parent) :
 	QObject(parent),
-	d(new StyleManagerPrivate(this))
+	d(new QtAdvancedStylesheetPrivate(this))
 {
 
 }
 
 
 //============================================================================
-CStyleManager::~CStyleManager()
+QtAdvancedStylesheet::~QtAdvancedStylesheet()
 {
 	delete d;
 }
 
 
 //============================================================================
-void CStyleManager::setStylesDirPath(const QString& DirPath)
+void QtAdvancedStylesheet::setStylesDirPath(const QString& DirPath)
 {
 	d->StylesDir = DirPath;
 	QDir Dir(d->StylesDir);
@@ -630,14 +670,14 @@ void CStyleManager::setStylesDirPath(const QString& DirPath)
 
 
 //============================================================================
-QString CStyleManager::stylesDirPath() const
+QString QtAdvancedStylesheet::stylesDirPath() const
 {
 	return d->StylesDir;
 }
 
 
 //============================================================================
-bool CStyleManager::setCurrentStyle(const QString& Style)
+bool QtAdvancedStylesheet::setCurrentStyle(const QString& Style)
 {
 	d->clearError();
 	d->CurrentStyle = Style;
@@ -657,49 +697,49 @@ bool CStyleManager::setCurrentStyle(const QString& Style)
 
 
 //============================================================================
-QString CStyleManager::currentStyle() const
+QString QtAdvancedStylesheet::currentStyle() const
 {
 	return d->CurrentStyle;
 }
 
 
 //============================================================================
-QString CStyleManager::currentStylePath() const
+QString QtAdvancedStylesheet::currentStylePath() const
 {
 	return d->StylesDir + "/" + d->CurrentStyle;
 }
 
 
 //============================================================================
-QString CStyleManager::outputDirPath() const
+QString QtAdvancedStylesheet::outputDirPath() const
 {
 	return d->OutputDir;
 }
 
 
 //============================================================================
-void CStyleManager::setOutputDirPath(const QString& Path)
+void QtAdvancedStylesheet::setOutputDirPath(const QString& Path)
 {
 	d->OutputDir = Path;
 }
 
 
 //============================================================================
-QString CStyleManager::currentStyleOutputPath() const
+QString QtAdvancedStylesheet::currentStyleOutputPath() const
 {
 	return outputDirPath() + "/" + d->CurrentStyle;
 }
 
 
 //============================================================================
-QString CStyleManager::themeVariableValue(const QString& VariableId) const
+QString QtAdvancedStylesheet::themeVariableValue(const QString& VariableId) const
 {
 	return d->ThemeVariables.value(VariableId, QString());
 }
 
 
 //============================================================================
-QColor CStyleManager::themeColor(const QString& VariableId) const
+QColor QtAdvancedStylesheet::themeColor(const QString& VariableId) const
 {
 	auto ColorString = d->ThemeColors.value(VariableId, QString());
 	if (ColorString.isEmpty())
@@ -712,7 +752,7 @@ QColor CStyleManager::themeColor(const QString& VariableId) const
 
 
 //============================================================================
-void CStyleManager::setThemeVariableValue(const QString& VariableId, const QString& Value)
+void QtAdvancedStylesheet::setThemeVariableValue(const QString& VariableId, const QString& Value)
 {
 	d->ThemeVariables.insert(VariableId, Value);
 	auto it = d->ThemeColors.find(VariableId);
@@ -724,7 +764,7 @@ void CStyleManager::setThemeVariableValue(const QString& VariableId, const QStri
 
 
 //============================================================================
-bool CStyleManager::setCurrentTheme(const QString& Theme)
+bool QtAdvancedStylesheet::setCurrentTheme(const QString& Theme)
 {
 	d->clearError();
 	if (d->JsonStyleParam.isEmpty())
@@ -744,18 +784,26 @@ bool CStyleManager::setCurrentTheme(const QString& Theme)
 
 
 //============================================================================
-bool CStyleManager::updateStylesheet()
+void QtAdvancedStylesheet::setDefaultTheme()
+{
+	setCurrentTheme(d->DefaultTheme);
+}
+
+
+//============================================================================
+bool QtAdvancedStylesheet::updateStylesheet()
 {
 	if (!processStyleTemplate())
 	{
 		return false;
 	}
 
-	if (!d->generateStylesheet() && (error() != CStyleManager::NoError))
+	if (!d->generateStylesheet() && (error() != QtAdvancedStylesheet::NoError))
 	{
 		return false;
 	}
 
+	d->IconColorReplaceList.clear();
 	emit stylesheetChanged();
 	return true;
 }
@@ -763,7 +811,7 @@ bool CStyleManager::updateStylesheet()
 
 
 //============================================================================
-bool CStyleManager::processStyleTemplate()
+bool QtAdvancedStylesheet::processStyleTemplate()
 {
 	updateApplicationPaletteColors();
 	return generateResources();
@@ -771,21 +819,21 @@ bool CStyleManager::processStyleTemplate()
 
 
 //============================================================================
-QString CStyleManager::currentTheme() const
+QString QtAdvancedStylesheet::currentTheme() const
 {
 	return d->CurrentTheme;
 }
 
 
 //============================================================================
-QString CStyleManager::styleSheet() const
+QString QtAdvancedStylesheet::styleSheet() const
 {
 	return d->Stylesheet;
 }
 
 
 //============================================================================
-const QIcon& CStyleManager::styleIcon() const
+const QIcon& QtAdvancedStylesheet::styleIcon() const
 {
 	if (d->Icon.isNull() && !d->IconFile.isEmpty())
 	{
@@ -797,21 +845,21 @@ const QIcon& CStyleManager::styleIcon() const
 
 
 //============================================================================
-const QStringList& CStyleManager::styles() const
+const QStringList& QtAdvancedStylesheet::styles() const
 {
 	return d->Styles;
 }
 
 
 //============================================================================
-const QStringList& CStyleManager::themes() const
+const QStringList& QtAdvancedStylesheet::themes() const
 {
 	return d->Themes;
 }
 
 
 //============================================================================
-QString CStyleManager::processStylesheetTemplate(const QString& Template,
+QString QtAdvancedStylesheet::processStylesheetTemplate(const QString& Template,
 	const QString& OutputFile)
 {
 	auto Stylesheet = Template;
@@ -825,28 +873,28 @@ QString CStyleManager::processStylesheetTemplate(const QString& Template,
 
 
 //============================================================================
-const QMap<QString, QString>& CStyleManager::themeColorVariables() const
+const QMap<QString, QString>& QtAdvancedStylesheet::themeColorVariables() const
 {
 	return d->ThemeColors;
 }
 
 
 //============================================================================
-CStyleManager::eError CStyleManager::error() const
+QtAdvancedStylesheet::eError QtAdvancedStylesheet::error() const
 {
 	return d->Error;
 }
 
 
 //============================================================================
-QString CStyleManager::errorString() const
+QString QtAdvancedStylesheet::errorString() const
 {
 	return d->ErrorString;
 }
 
 
 //============================================================================
-QString CStyleManager::path(eLocation Location) const
+QString QtAdvancedStylesheet::path(eLocation Location) const
 {
 	switch (Location)
 	{
@@ -860,15 +908,15 @@ QString CStyleManager::path(eLocation Location) const
 
 
 //============================================================================
-bool CStyleManager::generateResources()
+bool QtAdvancedStylesheet::generateResources()
 {
-	QDir ResourceDir(path(CStyleManager::ResourceTemplatesLocation));
+	QDir ResourceDir(path(QtAdvancedStylesheet::ResourceTemplatesLocation));
 	auto Entries = ResourceDir.entryInfoList({"*.svg"}, QDir::Files);
 
 	auto jresources = d->JsonStyleParam.value("resources").toObject();
 	if (jresources.isEmpty())
 	{
-		d->setError(CStyleManager::StyleJsonError, "Key resources "
+		d->setError(QtAdvancedStylesheet::StyleJsonError, "Key resources "
 			"missing in style json file");
 		return false;
 	}
@@ -880,7 +928,7 @@ bool CStyleManager::generateResources()
 		auto Param = itc.value().toObject();
 		if (Param.isEmpty())
 		{
-			d->setError(CStyleManager::StyleJsonError, "Key resources "
+			d->setError(QtAdvancedStylesheet::StyleJsonError, "Key resources "
 				"missing in style json file");
 			Result = false;
 			continue;
@@ -896,7 +944,7 @@ bool CStyleManager::generateResources()
 
 
 //============================================================================
-QPalette CStyleManager::generateThemePalette() const
+QPalette QtAdvancedStylesheet::generateThemePalette() const
 {
 	QPalette Palette = qApp->palette();
 	if (!d->PaletteBaseColor.isEmpty())
@@ -922,17 +970,25 @@ QPalette CStyleManager::generateThemePalette() const
 
 
 //============================================================================
-void CStyleManager::updateApplicationPaletteColors()
+void QtAdvancedStylesheet::updateApplicationPaletteColors()
 {
 	qApp->setPalette(generateThemePalette());
 }
 
 
 //============================================================================
-const QJsonObject& CStyleManager::styleParameters() const
+const QJsonObject& QtAdvancedStylesheet::styleParameters() const
 {
 	return d->JsonStyleParam;
 }
+
+
+//============================================================================
+bool QtAdvancedStylesheet::isCurrentThemeDark() const
+{
+	return d->IsDarkTheme;
+}
+
 
 } // namespace acss
 

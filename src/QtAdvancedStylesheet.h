@@ -19,18 +19,19 @@ class QIcon;
 
 namespace acss
 {
-struct StyleManagerPrivate;
+struct QtAdvancedStylesheetPrivate;
 using QStringPair = QPair<QString, QString>;
+using tColorReplaceList = QVector<QStringPair>;
 
 /**
  * Encapsulates all information about a single stylesheet based style
  */
-class CStyleManager : public QObject
+class QtAdvancedStylesheet : public QObject
 {
 	Q_OBJECT
 private:
-	StyleManagerPrivate* d; ///< private data (pimpl)
-	friend struct StyleManagerPrivate;
+	QtAdvancedStylesheetPrivate* d; ///< private data (pimpl)
+	friend struct QtAdvancedStylesheetPrivate;
 
 public:
 	enum eError
@@ -53,12 +54,12 @@ public:
 	/**
 	 * Default Constructor
 	 */
-	CStyleManager(QObject* parent = nullptr);
+	QtAdvancedStylesheet(QObject* parent = nullptr);
 
 	/**
 	 * Virtual Destructor
 	 */
-	virtual ~CStyleManager();
+	virtual ~QtAdvancedStylesheet();
 
 	/**
 	 * Set the directory path that contains all styles
@@ -199,6 +200,14 @@ public:
 	 */
 	const QJsonObject& styleParameters() const;
 
+	/**
+	 * The function returns true, if the current theme is a dark theme
+	 * and false if the current theme is a light theme.
+	 * The application can use this functions to adjust settings depending
+	 * on dark or light theme
+	 */
+	bool isCurrentThemeDark() const;
+
 
 public slots:
 	/**
@@ -213,6 +222,11 @@ public slots:
 	 * explicitely updateStylesheet().
 	 */
 	bool setCurrentTheme(const QString& Theme);
+
+	/**
+	 * Sets the default theme that is given in the style Json file
+	 */
+	void setDefaultTheme();
 
 	/**
 	 * Set the current style
@@ -263,6 +277,16 @@ public slots:
 	 */
 	void updateApplicationPaletteColors();
 
+	/**
+	 * Replace SVG color in the given SvgContent file with theme colors.
+	 * If an optional ColorReplaceList is provided, the the given list is used
+	 * to replace the colors in the given SvgContent file. If no color replace
+	 * list is given, the internal color replace list parsed from style json
+	 * file is used
+	 */
+	void replaceSvgColors(QByteArray& SvgContent,
+		const tColorReplaceList& ColorReplaceList = tColorReplaceList());
+
 signals:
 	/**
 	 * This signal is emitted if the selected style changed
@@ -276,7 +300,7 @@ signals:
 
 	/**
 	 * This signal is emitted if the stylesheet changed.
-	 * The stylecheed changes if the style changes, the theme changes or if a
+	 * The stylesheed changes if the style changes, the theme changes or if a
 	 * style variable changed an the user requested a styleheet update
 	 */
 	void stylesheetChanged();

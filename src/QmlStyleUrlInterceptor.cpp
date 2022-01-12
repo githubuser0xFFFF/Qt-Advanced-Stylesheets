@@ -12,13 +12,13 @@
 
 #include <QDebug>
 
-#include "StyleManager.h"
+#include "QtAdvancedStylesheet.h"
 
 namespace acss
 {
 //=============================================================================
-CQmlStyleUrlInterceptor::CQmlStyleUrlInterceptor(CStyleManager* StyleManager)
-    : m_StyleManager{StyleManager}
+CQmlStyleUrlInterceptor::CQmlStyleUrlInterceptor(QtAdvancedStylesheet* AdvancedStylesheet)
+    : m_AdvancedStylesheet{AdvancedStylesheet}
 {}
 
 //=============================================================================
@@ -26,9 +26,9 @@ QUrl CQmlStyleUrlInterceptor::intercept(const QUrl& path, DataType type)
 {
     if (type == UrlString && path.scheme() == "icon")
     {
-        if (m_StyleManager)
+        if (m_AdvancedStylesheet)
         {
-            return QUrl::fromLocalFile(m_StyleManager->currentStyleOutputPath()
+            return QUrl::fromLocalFile(m_AdvancedStylesheet->currentStyleOutputPath()
                                        + '/' + path.path());
         }
         qWarning() << "AdvancedStylesheet Error: CQmlStyleUrlInterceptor has no "
