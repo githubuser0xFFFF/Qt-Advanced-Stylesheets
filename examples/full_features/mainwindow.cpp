@@ -1,9 +1,9 @@
-#include "MainWindow.h"
+#include "mainwindow.h"
 
 #include <QtAdvancedStylesheet.h>
 #include <QmlStyleUrlInterceptor.h>
 
-#include "ui_MainWindow.h"
+#include "ui_mainwindow.h"
 #include <QDir>
 #include <QApplication>
 #include <QAction>
