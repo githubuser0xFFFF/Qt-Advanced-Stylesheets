@@ -124,6 +124,9 @@ void MainWindowPrivate::setupQuickWidget()
         new acss::CQmlStyleUrlInterceptor(StyleManager));
     ui.quickWidget->setStyleSheet(StyleManager->styleSheet());
     ui.quickWidget->setSource(QUrl("qrc:/full_features/qml/simple_demo.qml"));
+    ui.quickWidget->setAttribute(Qt::WA_AlwaysStackOnTop);
+    ui.quickWidget->setAttribute(Qt::WA_TranslucentBackground);
+    ui.quickWidget->setClearColor(Qt::transparent);
 }
 
 
