@@ -208,6 +208,26 @@ public:
 	 */
 	bool isCurrentThemeDark() const;
 
+	/**
+	 * Replace SVG color in the given SvgContent file with theme colors.
+	 * If an optional ColorReplaceList is provided, the the given list is used
+	 * to replace the colors in the given SvgContent file. If no color replace
+	 * list is given, the internal color replace list parsed from style json
+	 * file is used
+	 */
+	void replaceSvgColors(QByteArray& SvgContent,
+		const tColorReplaceList& ColorReplaceList = tColorReplaceList());
+
+	/**
+	 * Loads SVG data from the given Filename and then passes the loaded
+	 * SVG data to replaceSvgColors() function to replace colors with theme
+	 * colors.
+	 * If an optional ColorReplaceList is provided, then the function will
+	 * use the colors from the list instead of the parsed theme colors.
+	 * Returns an invalid icon (QIcon.isNull()) in case of an error
+	 */
+	QIcon loadThemeAwareSvgIcon(const QString& Filename,
+		const tColorReplaceList& ColorReplaceList = tColorReplaceList());
 
 public slots:
 	/**
@@ -277,15 +297,6 @@ public slots:
 	 */
 	void updateApplicationPaletteColors();
 
-	/**
-	 * Replace SVG color in the given SvgContent file with theme colors.
-	 * If an optional ColorReplaceList is provided, the the given list is used
-	 * to replace the colors in the given SvgContent file. If no color replace
-	 * list is given, the internal color replace list parsed from style json
-	 * file is used
-	 */
-	void replaceSvgColors(QByteArray& SvgContent,
-		const tColorReplaceList& ColorReplaceList = tColorReplaceList());
 
 signals:
 	/**

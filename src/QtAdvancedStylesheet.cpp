@@ -25,10 +25,60 @@
 #include <QApplication>
 #include <QPalette>
 #include <QStyle>
+#include <QIconEngine>
+#include <QSvgRenderer>
+#include <QPainter>
 
 
 namespace acss
 {
+/**
+ * SvgIcon engine that supports loading from memory buffer
+ */
+class CSVGIconEngine : public QIconEngine
+{
+private:
+	QByteArray m_SvgContent; ///< memory buffer with SVG data load from file
+
+public:
+	explicit CSVGIconEngine(const QByteArray &SvgContent)
+		: m_SvgContent(SvgContent)
+	{
+	}
+
+	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode,
+	    QIcon::State state) override
+	{
+		QSvgRenderer renderer(m_SvgContent);
+		renderer.render(painter, rect);
+	}
+
+	virtual QIconEngine* clone() const override
+	{
+		return new CSVGIconEngine(*this);
+	}
+
+	virtual QPixmap pixmap(const QSize &size, QIcon::Mode mode,
+	    QIcon::State state) override
+	{
+		// This function is necessary to create an EMPTY pixmap. It's called always
+		// before paint()
+		QImage img(size, QImage::Format_ARGB32);
+		img.fill(qRgba(0, 0, 0, 0));
+		QPixmap pix = QPixmap::fromImage(img, Qt::NoFormatConversion);
+		{
+			QPainter painter(&pix);
+			QRect r(QPoint(0.0, 0.0), size);
+			this->paint(&painter, r, mode, state);
+		}
+		return pix;
+	}
+};
+
+
+/**
+ * Groups the data the build a parsed palette color entry
+ */
 struct PaletteColorEntry
 {
 	QPalette::ColorGroup Group;
@@ -235,6 +285,11 @@ struct QtAdvancedStylesheetPrivate
 	 * is is properly initialized
 	 */
 	const tColorReplaceList& iconColorReplaceList() const;
+
+	/**
+	 * Parse a color replace list from the given JsonObject
+	 */
+	tColorReplaceList parseColorReplaceList(const QJsonObject& JsonObject) const;
 };// struct AdvancedStylesheetPrivate
 
 
@@ -572,17 +627,8 @@ void QtAdvancedStylesheetPrivate::replaceColor(QByteArray& Content,
 
 
 //============================================================================
-bool QtAdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
-	const QJsonObject& JsonObject, const QFileInfoList& Entries)
+tColorReplaceList QtAdvancedStylesheetPrivate::parseColorReplaceList(const QJsonObject& JsonObject) const
 {
-	const QString OutputDir = _this->currentStyleOutputPath() + "/" + SubDir;
-	if (!QDir().mkpath(OutputDir))
-	{
-		setError(QtAdvancedStylesheet::ResourceGeneratorError, "Error "
-			"creating resource output folder: " + OutputDir);
-		return false;
-	}
-
 	// Fill the color replace list with the values read from style json file
 	tColorReplaceList ColorReplaceList;
 	for (auto it = JsonObject.constBegin(); it != JsonObject.constEnd(); ++it)
@@ -597,6 +643,24 @@ bool QtAdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
 		}
 		ColorReplaceList.append({TemplateColor, ThemeColor});
 	}
+
+	return ColorReplaceList;
+}
+
+
+//============================================================================
+bool QtAdvancedStylesheetPrivate::generateResourcesFor(const QString& SubDir,
+	const QJsonObject& JsonObject, const QFileInfoList& Entries)
+{
+	const QString OutputDir = _this->currentStyleOutputPath() + "/" + SubDir;
+	if (!QDir().mkpath(OutputDir))
+	{
+		setError(QtAdvancedStylesheet::ResourceGeneratorError, "Error "
+			"creating resource output folder: " + OutputDir);
+		return false;
+	}
+
+	auto ColorReplaceList = parseColorReplaceList(JsonObject);
 
 	// Now loop through all resources svg files and replace the colors
 	for (const auto& Entry : Entries)
@@ -631,19 +695,7 @@ const tColorReplaceList& QtAdvancedStylesheetPrivate::iconColorReplaceList() con
 		return IconColorReplaceList;
 	}
 
-	for (auto it = jicon_colors.constBegin(); it != jicon_colors.constEnd(); ++it)
-	{
-		auto TemplateColor = it.key();
-		auto ThemeColor = it.value().toString();
-		// If the color starts with an hashtag, then we have a real color value
-		// If it does not start with # then it is a theme variable
-		if (!ThemeColor.startsWith('#'))
-		{
-			ThemeColor = _this->themeVariableValue(ThemeColor);
-		}
-		IconColorReplaceList.append({TemplateColor, ThemeColor});
-	}
-
+	IconColorReplaceList = parseColorReplaceList(jicon_colors);
 	return IconColorReplaceList;
 }
 
@@ -658,6 +710,18 @@ void QtAdvancedStylesheet::replaceSvgColors(QByteArray& SvgContent,
 	{
 		d->replaceColor(SvgContent, Replace.first, Replace.second);
 	}
+}
+
+
+//============================================================================
+QIcon QtAdvancedStylesheet::loadThemeAwareSvgIcon(const QString& Filename,
+	const tColorReplaceList& ColorReplaceList)
+{
+	QFile SvgFile(Filename);
+	SvgFile.open(QIODevice::ReadOnly);
+	auto Content = SvgFile.readAll();
+	replaceSvgColors(Content);
+	return QIcon(new CSVGIconEngine(Content));
 }
 
 
