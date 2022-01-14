@@ -5,7 +5,7 @@ TARGET = $$qtLibraryTarget(qtadvancedcss)
 DEFINES += QT_DEPRECATED_WARNINGS
 TEMPLATE = lib
 DESTDIR = $${ACSS_OUT_ROOT}/lib
-QT += core gui widgets qml
+QT += core gui widgets qml svg
 
 !acssBuildStatic {
 	CONFIG += shared
