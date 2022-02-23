@@ -35,16 +35,17 @@ And light:
 
 ## Navigation
 
-- [Qt-Advanced-Stylesheets](#qt-advanced-stylesheets)
-  - [Navigation](#navigation)
-  - [Build](#build)
-  - [Getting started](#getting-started)
-  - [Run examples](#run-examples)
-  - [Usage in QML](#usage-in-qml)
-  - [Future Plans](#future-plans)
-  - [License information](#license-information)
-  - [Credits](#credits)
-  - [Donation](#donation)
+- [Navigation](#navigation)
+- [Build](#build)
+- [Getting started](#getting-started)
+- [Run examples](#run-examples)
+- [Usage in QML](#usage-in-qml)
+- [Future Plans](#future-plans)
+- [License information](#license-information)
+- [Credits](#credits)
+- [Donation](#donation)
+- [Showcase](#showcase)
+  - [CETONI Elements](#cetoni-elements)
 
 ## Build
 
@@ -149,3 +150,16 @@ If this project help you reduce time to develop or if you just like it, you can 
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=85R64TMMSY9T6">
   <img src="doc/donate.png" alt="Donate with PayPal" width="160"/>
 </a>
+
+## Showcase
+
+### [CETONI Elements](https://www.cetoni.com/products/qmixelements/)
+
+The CETONI Elements software from [CETONI](https://www.cetoni.com) is a comprehensive, 
+plugin-based and modular laboratory automation software for controlling CETONI devices using a joint graphical user interface. The software features a powerful script system to automate processes.
+
+CETONI Elements Dark Theme
+![CETONI_Elements Dark](doc/CETONI_Elements_Dark.png)
+
+CETONI Elements Light Theme
+![CETONI_Elements Light](doc/CETONI_Elements_Light.png)
