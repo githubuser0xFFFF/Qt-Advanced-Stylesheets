@@ -3,9 +3,22 @@
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 
-Advanced Stylesheets with Theming Support for Qt. The library allows you to
-create stylesheets that contain variables that are replaced at runtime like in
-this example:
+Advanced Stylesheets with Theming Support for Qt.
+
+The library allows runtime color switching for stylesheet themes. The libray also
+adjusts the colors of the *.svg resources and icons at runtime.
+If you run the `full_features` example, then you can test the functionality.
+
+There are some custom dark themes:
+
+![dark](doc/qt_material_dark.gif)
+
+And light:
+
+![light](doc/qt_material_light.gif)
+
+The library allows you to create stylesheets that contain variables that are
+replaced at runtime like in this example:
 
 ```css
 QComboBox:disabled {
@@ -21,21 +34,11 @@ QComboBox::drop-down {
 }
 ```
 
-This allows runtime color switching for stylesheet themes. The libray also
-adjusts the colors of the *.svg resources at runtime.
-If you run the `full_features` example, then you can test the functionality.
-
-There are some custom dark themes:
-
-![dark](doc/qt_material_dark.gif)
-
-And light:
-
-![light](doc/qt_material_light.gif)
-
 ## Navigation
 
 - [Navigation](#navigation)
+- [Features](#features)
+  - [Theme-aware Icons](#theme-aware-icons)
 - [Build](#build)
 - [Getting started](#getting-started)
 - [Run examples](#run-examples)
@@ -46,6 +49,21 @@ And light:
 - [Donation](#donation)
 - [Showcase](#showcase)
   - [CETONI Elements](#cetoni-elements)
+
+## Features
+
+### Theme-aware Icons
+
+The library supports loading of theme-aware SVG icons.
+
+```cpp
+AdvancedStylesheet.loadThemeAwareSvgIcon(":/app/images/progress.svg");
+```
+
+This allows runtime color switching of application icons like in the
+toolbar below.
+
+![Theme Aware Icon](doc/theme_aware_icons.gif)
 
 ## Build
 
@@ -60,19 +78,19 @@ manager to your application:
 
 ```cpp
 QString AppDir = qApp->applicationDirPath();
-CStyleManager StyleManager;
+QtAdvancedStylesheet AdvancedStylesheet;
 
 // first set the directory that contains all your styles
-StyleManager.setStylesDirPath(AppDir + "/../../styles");
+AdvancedStylesheet.setStylesDirPath(AppDir + "/../../styles");
 
 // now set the output folder where the processed styles are stored. The
 // style manager will create a sub directory for each style
-StyleManager.setOutputDirPath(AppDir + "/output");
+AdvancedStylesheet.setOutputDirPath(AppDir + "/output");
 
 // set the current style and select a theme. After these two calls, the output
 // folder will contains the generated resoruces and stylesheet.
-StyleManager.setCurrentStyle("qt_material");
-StyleManager.setCurrentTheme("dark_teal");
+AdvancedStylesheet.setCurrentStyle("qt_material");
+AdvancedStylesheet.setCurrentTheme("dark_teal");
 
 // now you can set the generated stylesheet
 qApp->setStyleSheet(StyleManager.styleSheet());
@@ -86,12 +104,14 @@ themes and create new ones.
 ![theme](doc/theme.gif)
 
 ## Usage in QML
+
 This project can also be used with QML applications. In addition to the steps 
 described in the [previous paragraph](#getting-started) you need to register the 
 provided `CQmlStyleUrlInterceptor` to the QML Engine you're using.
 
 Let's say you have your `CStyleManager` instance and a `QQuickWidget` that 
 displays your QML content. The only thing you need to do now is the following:
+
 ```cpp
 acss::CStyleManager* StyleManager = new acss::CStyleManager;
 
@@ -101,6 +121,7 @@ Widget.engine()->setUrlInterceptor(new CQmlStyleUrlInterceptor(StyleManager));
 
 And that's it. Now you can use all of the icons provided by the style manager as
 you would in your C++ code:
+
 ```qml
 CheckBox {
     id: checkBox
