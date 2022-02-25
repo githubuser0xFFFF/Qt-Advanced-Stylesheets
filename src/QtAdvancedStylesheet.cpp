@@ -28,6 +28,7 @@
 #include <QIconEngine>
 #include <QSvgRenderer>
 #include <QPainter>
+#include <QSet>
 
 
 namespace acss
@@ -38,12 +39,51 @@ namespace acss
 class CSVGIconEngine : public QIconEngine
 {
 private:
+	QByteArray m_SvgTemplate;
 	QByteArray m_SvgContent; ///< memory buffer with SVG data load from file
+	QtAdvancedStylesheet* m_AdvancedStyleheet = nullptr;
 
 public:
-	explicit CSVGIconEngine(const QByteArray &SvgContent)
-		: m_SvgContent(SvgContent)
+	static QSet<CSVGIconEngine*> Instances;
+
+	/**
+	 * Creates an icon engine with the given SVG content an assigned
+	 * AndvancedStylesheet object
+	 */
+	explicit CSVGIconEngine(const QByteArray &SvgContent, QtAdvancedStylesheet* Styleeheet)
+		: m_SvgTemplate(SvgContent),
+		  m_AdvancedStyleheet(Styleeheet)
 	{
+		update();
+		Instances.insert(this);
+	}
+
+	/**
+	 * Removes itself from the set of instances
+	 */
+	virtual ~CSVGIconEngine()
+	{
+		Instances.remove(this);
+	}
+
+	/**
+	 * Update the SVG content with the current theme icon colors
+	 */
+	void update()
+	{
+		m_SvgContent = m_SvgTemplate;
+		m_AdvancedStyleheet->replaceSvgColors(m_SvgContent);
+	}
+
+	/**
+	 * Calls update for all Icon engine instances
+	 */
+	static void updateAllIcons()
+	{
+		for (auto Engine : Instances)
+		{
+			Engine->update();
+		}
 	}
 
 	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode,
@@ -74,6 +114,8 @@ public:
 		return pix;
 	}
 };
+
+QSet<CSVGIconEngine*> CSVGIconEngine::Instances;
 
 
 /**
@@ -720,8 +762,7 @@ QIcon QtAdvancedStylesheet::loadThemeAwareSvgIcon(const QString& Filename,
 	QFile SvgFile(Filename);
 	SvgFile.open(QIODevice::ReadOnly);
 	auto Content = SvgFile.readAll();
-	replaceSvgColors(Content);
-	return QIcon(new CSVGIconEngine(Content));
+	return QIcon(new CSVGIconEngine(Content, this));
 }
 
 
@@ -879,12 +920,13 @@ bool QtAdvancedStylesheet::updateStylesheet()
 		return false;
 	}
 
+	d->IconColorReplaceList.clear();
+	CSVGIconEngine::updateAllIcons();
 	if (!d->generateStylesheet() && (error() != QtAdvancedStylesheet::NoError))
 	{
 		return false;
 	}
 
-	d->IconColorReplaceList.clear();
 	emit stylesheetChanged();
 	return true;
 }
