@@ -1,3 +1,7 @@
+![logo](doc/ass_logo.svg)
+
+------------------
+
 # Qt-Advanced-Stylesheets
 
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
