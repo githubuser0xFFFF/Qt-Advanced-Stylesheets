@@ -5,12 +5,29 @@
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 
+[What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/releases/latest) •
+[Documentation](doc/user-guide.md)
+
 Advanced Stylesheets with Theming Support for Qt.
 
-The library allows runtime color switching for stylesheet themes. The libray also
-adjusts the colors of the *.svg resources and icons at runtime.
-If you run the `full_features` example, then you can test the functionality.
+The library allows runtime color switching for CSS stylesheet themes including
+SVG resources and SVG icons. The image below shows switching of accent color
+and switching between dark and light theme. Notice how the icons in the left 
+sidebar change color when switching between dark and light theme.
 
+![color_switching](doc/CETONI_Elements_Styling.gif)
+
+The main features are:
+
+- runtime switching of CSS colors
+- runtime color switching of CSS SVG icons / resources
+- runtime color switching of icons loaded via `loadThemeAwareSvgIcon()`
+- runtime switching of QPalette colors
+- definition of CSS styles that switch the complete application design
+- definition of XML color themes that allow switching of theme colors (dark / light)
+- switching of individual theme color or switching of accent color
+
+If you run the `full_features` example, then you can test the functionality. 
 There are some custom dark themes:
 
 ![dark](doc/qt_material_dark.gif)
@@ -44,7 +61,6 @@ QComboBox::drop-down {
 - [Build](#build)
 - [Getting started](#getting-started)
 - [Run examples](#run-examples)
-- [Usage in QML](#usage-in-qml)
 - [Future Plans](#future-plans)
 - [License information](#license-information)
 - [Credits](#credits)
@@ -105,46 +121,6 @@ themes and create new ones.
 
 ![theme](doc/theme.gif)
 
-## Usage in QML
-
-This project can also be used with QML applications. In addition to the steps 
-described in the [previous paragraph](#getting-started) you need to register the 
-provided `CQmlStyleUrlInterceptor` to the QML Engine you're using.
-
-Let's say you have your `CStyleManager` instance and a `QQuickWidget` that 
-displays your QML content. The only thing you need to do now is the following:
-
-```cpp
-acss::CStyleManager* StyleManager = new acss::CStyleManager;
-
-QQuickWidget Widget;
-Widget.engine()->setUrlInterceptor(new CQmlStyleUrlInterceptor(StyleManager));
-```
-
-And that's it. Now you can use all of the icons provided by the style manager as
-you would in your C++ code:
-
-```qml
-CheckBox {
-    id: checkBox
-
-    indicator: Rectangle {
-        implicitHeight: 26
-        implicitWidth: 26
-        x: checkBox.leftPadding
-        y: checkBox.height / 2 - height / 2
-        Image {
-            source: checkBox.checked ? "icon:/primary/checkbox_checked.svg" :
-                                        "icon:/primary/checkbox_unchecked.svg"
-            // Important: Disable caching because otherwise you won't see any changes
-            cache: false
-        }
-    }
-}
-```
-
-Check the `full_features` example to see this in action.
-
 ## Future Plans
 
 The idea is to merge my [QtFluentDesign](https://github.com/githubuser0xFFFF/QtFluentDesign) project into this project to create a nice Windows 11 style that can dynamically
@@ -180,6 +156,8 @@ If this project help you reduce time to develop or if you just like it, you can 
 
 The CETONI Elements software from [CETONI](https://www.cetoni.com) is a comprehensive, 
 plugin-based and modular laboratory automation software for controlling CETONI devices using a joint graphical user interface. The software features a powerful script system to automate processes.
+
+https://youtu.be/xWTpCwCz8dI
 
 CETONI Elements Dark Theme
 ![CETONI_Elements Dark](doc/CETONI_Elements_Dark.png)
