@@ -2,6 +2,7 @@
     "name" : "material",
     "icon" : "material_icon.svg",
     "css_template" : "material.css.template",
+    "default_theme" : "dark_amber",
 
     "variables" : {
         "font_family" : "Roboto",
