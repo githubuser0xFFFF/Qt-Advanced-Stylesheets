@@ -1,5 +1,5 @@
 <!--?xml version="1.0" encoding="UTF-8"?-->
-<resources>
+<resources dark="1">
   <color name="primaryColor">#8bc34a</color>
   <color name="primaryLightColor">#bef67a</color>
   <color name="secondaryColor">#232629</color>
