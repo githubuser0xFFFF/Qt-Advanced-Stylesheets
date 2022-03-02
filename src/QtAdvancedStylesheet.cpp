@@ -89,6 +89,9 @@ public:
 	virtual void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode,
 	    QIcon::State state) override
 	{
+		Q_UNUSED(mode);
+		Q_UNUSED(state);
+
 		QSvgRenderer renderer(m_SvgContent);
 		renderer.render(painter, rect);
 	}
@@ -756,8 +759,7 @@ void QtAdvancedStylesheet::replaceSvgColors(QByteArray& SvgContent,
 
 
 //============================================================================
-QIcon QtAdvancedStylesheet::loadThemeAwareSvgIcon(const QString& Filename,
-	const tColorReplaceList& ColorReplaceList)
+QIcon QtAdvancedStylesheet::loadThemeAwareSvgIcon(const QString& Filename)
 {
 	QFile SvgFile(Filename);
 	SvgFile.open(QIODevice::ReadOnly);

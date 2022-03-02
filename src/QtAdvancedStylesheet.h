@@ -222,12 +222,11 @@ public:
 	 * Loads SVG data from the given Filename and then passes the loaded
 	 * SVG data to replaceSvgColors() function to replace colors with theme
 	 * colors.
-	 * If an optional ColorReplaceList is provided, then the function will
-	 * use the colors from the list instead of the parsed theme colors.
-	 * Returns an invalid icon (QIcon.isNull()) in case of an error
+	 * The function uses the parsed theme colors to replace the colors in
+	 * the given SVG icon. If the theme changes, all icons that are loaded
+	 * with this function are automatically updated to the new theme colors.
 	 */
-	QIcon loadThemeAwareSvgIcon(const QString& Filename,
-		const tColorReplaceList& ColorReplaceList = tColorReplaceList());
+	QIcon loadThemeAwareSvgIcon(const QString& Filename);
 
 public slots:
 	/**

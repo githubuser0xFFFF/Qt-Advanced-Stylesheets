@@ -42,6 +42,11 @@ struct MainWindowPrivate
 	void setupQuickWidget();
 	void updateThemeColorButtons();
 	void updateQuickWidget();
+
+	/**
+	 * Loads theme aware icons for the actions in the toolbar
+	 */
+	void loadThemeAwareToolbarActionIcons();
 };
 
 
@@ -130,6 +135,15 @@ void MainWindowPrivate::setupQuickWidget()
 }
 
 
+void MainWindowPrivate::loadThemeAwareToolbarActionIcons()
+{
+	ui.actionSelected->setIcon(AdvancedStyleSheet->loadThemeAwareSvgIcon(":/full_features/images/edit.svg"));
+	ui.actionaction->setIcon(AdvancedStyleSheet->loadThemeAwareSvgIcon(":/full_features/images/folder_open.svg"));
+	ui.actionaction2->setIcon(AdvancedStyleSheet->loadThemeAwareSvgIcon(":/full_features/images/save.svg"));
+	ui.actionaction3->setIcon(AdvancedStyleSheet->loadThemeAwareSvgIcon(":/full_features/images/help_outline.svg"));
+}
+
+
 CMainWindow::CMainWindow(QWidget *parent)
     : QMainWindow(parent),
       d(new MainWindowPrivate(this))
@@ -153,6 +167,7 @@ CMainWindow::CMainWindow(QWidget *parent)
     d->fillThemeMenu();
     d->setSomeIcons();
     d->setupQuickWidget();
+    d->loadThemeAwareToolbarActionIcons();
 }
 
 CMainWindow::~CMainWindow()

@@ -24,6 +24,10 @@
             "#000000" : "#ffffff00"
         }
     },
+    
+    "icon_colors" : {
+        "#03b8e5" : "secondaryTextColor"
+    },    
 
     "palette" : {
         "active" : {
