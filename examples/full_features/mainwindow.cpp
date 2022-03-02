@@ -156,7 +156,7 @@ CMainWindow::CMainWindow(QWidget *parent)
     d->AdvancedStyleSheet->setStylesDirPath(StylesDir);
     d->AdvancedStyleSheet->setOutputDirPath(AppDir + "/output");
     d->AdvancedStyleSheet->setCurrentStyle("qt_material");
-    d->AdvancedStyleSheet->setCurrentTheme("dark_teal");
+    d->AdvancedStyleSheet->setDefaultTheme();
     d->AdvancedStyleSheet->updateStylesheet();
     setWindowIcon(d->AdvancedStyleSheet->styleIcon());
     qApp->setStyleSheet(d->AdvancedStyleSheet->styleSheet());
