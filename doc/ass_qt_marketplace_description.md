@@ -22,7 +22,7 @@ The main features are:
 - switching of individual theme color or switching of accent color
 - QML support
 
-If you run the `full_features` example, then you can test the functionality. 
+If you run the `full_features` example, then you can test the functionality.
 There are some custom dark themes:
 
 ![dark](https://raw.githubusercontent.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/master/doc/qt_material_dark.gif)
