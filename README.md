@@ -26,6 +26,7 @@ The main features are:
 - definition of CSS styles that switch the complete application design
 - definition of XML color themes that allow switching of theme colors (dark / light)
 - switching of individual theme color or switching of accent color
+- QML support
 
 If you run the `full_features` example, then you can test the functionality. 
 There are some custom dark themes:
