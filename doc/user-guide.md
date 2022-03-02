@@ -36,7 +36,7 @@ some common settings:
 "default_theme" : "dark_teal",
 ```
 
-The `name` defines the name of th style that is returned by the `styles()` f
+The `name` defines the name of th style that is returned by the `styles()`
 function or that is used to set a style via `setStyle()` function. The `icon`
 defines the style icon returned by the `styleIcon()` function. The `css_template`
 defines the CSS template file that will be processed to get the final CSS file.
@@ -84,9 +84,22 @@ These variables can then be used in the style templates as follows:
 }
 ```
 
+To use a variable, just insert the variable name inside of two curly braces.
+You can even combine a variable with an opacity value to create translucent
+colors. The following example shows this. The opacity is a float value between
+0 (fully transparent) and 1 (100% opaque).
+
+```css
+QStatusBar {
+  color: {{secondaryTextColor}};
+  background-color: {{secondaryLightColor|opacity(0.2)}};
+  border-radius: 0px;
+}
+```
+
 ### The resources section
 
-The resources sections defines how colors are replaces for the icons in the
+The resources sections defines how colors are replaced for the icons in the
 resources folder that are used by the CSS style tenmplate. For each resource
 set, a separate folder will be created. In the example below, two folders
 are created by the style for the two resource sets `primary` and `disabled`. Both
