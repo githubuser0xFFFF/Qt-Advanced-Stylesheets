@@ -1,3 +1,5 @@
+![ukraine](doc/ukraine.jpg)
+
 ![logo](doc/ass_logo.svg)
 
 ------------------
@@ -5,7 +7,7 @@
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 
-[What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/releases/latest) •
+[What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/releases/latest)
 [Documentation](doc/user-guide.md)
 
 Advanced Stylesheets with Theming Support for Qt.
