@@ -7,6 +7,8 @@
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 
+Original Repository: https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets
+
 [What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/releases/latest)
 
 [Documentation](doc/user-guide.md)
