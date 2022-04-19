@@ -7,7 +7,8 @@
 [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 
-[What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/releases/latest)
+[What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/releases/latest)
+
 [Documentation](doc/user-guide.md)
 
 Advanced Stylesheets with Theming Support for Qt.
@@ -155,12 +156,11 @@ If this project help you reduce time to develop or if you just like it, you can 
 
 ## Showcase
 
-### [CETONI Elements](https://www.cetoni.com/products/qmixelements/)
+### [CETONI Elements](https://cetoni.com/cetoni-elements/)
 
-The CETONI Elements software from [CETONI](https://www.cetoni.com) is a comprehensive, 
+The [CETONI Elements](https://youtu.be/xWTpCwCz8dI) software from
+[CETONI](https://www.cetoni.com) is a comprehensive,
 plugin-based and modular laboratory automation software for controlling CETONI devices using a joint graphical user interface. The software features a powerful script system to automate processes.
-
-https://youtu.be/xWTpCwCz8dI
 
 CETONI Elements Dark Theme
 ![CETONI_Elements Dark](doc/CETONI_Elements_Dark.png)
