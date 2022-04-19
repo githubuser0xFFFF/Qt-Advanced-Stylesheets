@@ -32,6 +32,8 @@
 //============================================================================
 #include <QQmlAbstractUrlInterceptor>
 
+#include "acss_globals.h"
+
 namespace acss
 {
 class QtAdvancedStylesheet;
@@ -64,7 +66,7 @@ class QtAdvancedStylesheet;
  * and turn them into absolute paths (with the help of the @c QtAdvancedStylesheet
  * instance passed in the constructor) that can be understood by QML.
  */
-class CQmlStyleUrlInterceptor : public QQmlAbstractUrlInterceptor
+class ACSS_EXPORT CQmlStyleUrlInterceptor : public QQmlAbstractUrlInterceptor
 {
 public:
     /**

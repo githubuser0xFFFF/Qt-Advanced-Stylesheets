@@ -30,6 +30,7 @@ windows {
 #RESOURCES += ads.qrc
 
 HEADERS += \
+    acss_globals.h \
 	QmlStyleUrlInterceptor.h \
 	QtAdvancedStylesheet.h
 

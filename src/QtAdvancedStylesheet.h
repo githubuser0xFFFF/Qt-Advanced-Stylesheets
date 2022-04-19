@@ -34,7 +34,10 @@
 #include <QPair>
 #include <QObject>
 
-class QIcon;
+#include "acss_globals.h"
+
+
+QT_FORWARD_DECLARE_CLASS(QIcon)
 
 namespace acss
 {
@@ -45,7 +48,7 @@ using tColorReplaceList = QVector<QStringPair>;
 /**
  * Encapsulates all information about a single stylesheet based style
  */
-class QtAdvancedStylesheet : public QObject
+class ACSS_EXPORT QtAdvancedStylesheet : public QObject
 {
 	Q_OBJECT
 private:
