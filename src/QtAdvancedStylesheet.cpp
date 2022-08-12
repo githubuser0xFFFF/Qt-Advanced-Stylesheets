@@ -52,6 +52,9 @@
 
 namespace acss
 {
+class CSVGIconEngine;
+Q_GLOBAL_STATIC(QSet<CSVGIconEngine*>, IconEngineInstances)
+
 /**
  * SvgIcon engine that supports loading from memory buffer
  */
@@ -63,8 +66,6 @@ private:
 	QtAdvancedStylesheet* m_AdvancedStyleheet = nullptr;
 
 public:
-	static QSet<CSVGIconEngine*> Instances;
-
 	/**
 	 * Creates an icon engine with the given SVG content an assigned
 	 * AndvancedStylesheet object
@@ -74,7 +75,7 @@ public:
 		  m_AdvancedStyleheet(Styleeheet)
 	{
 		update();
-		Instances.insert(this);
+		IconEngineInstances->insert(this);
 	}
 
 	/**
@@ -82,7 +83,10 @@ public:
 	 */
 	virtual ~CSVGIconEngine()
 	{
-		Instances.remove(this);
+		if (!IconEngineInstances.isDestroyed())
+		{
+			IconEngineInstances->remove(this);
+		}
 	}
 
 	/**
@@ -99,7 +103,7 @@ public:
 	 */
 	static void updateAllIcons()
 	{
-		for (auto Engine : Instances)
+		for (auto Engine : *IconEngineInstances)
 		{
 			Engine->update();
 		}
@@ -136,8 +140,6 @@ public:
 		return pix;
 	}
 };
-
-QSet<CSVGIconEngine*> CSVGIconEngine::Instances;
 
 
 /**

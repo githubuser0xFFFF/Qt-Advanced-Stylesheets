@@ -232,7 +232,7 @@ public:
 
 	/**
 	 * Replace SVG color in the given SvgContent file with theme colors.
-	 * If an optional ColorReplaceList is provided, the the given list is used
+	 * If an optional ColorReplaceList is provided, then the given list is used
 	 * to replace the colors in the given SvgContent file. If no color replace
 	 * list is given, the internal color replace list parsed from style json
 	 * file is used
