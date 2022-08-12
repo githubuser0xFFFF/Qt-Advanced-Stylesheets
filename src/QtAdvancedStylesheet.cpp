@@ -406,7 +406,7 @@ void QtAdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 		QString MatchString = match.captured();
 		// Use only the value inside of the brackets {{ }} without the brackets
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-		auto TemplateVariable = QStringView(MatchString).mid(2, MatchString.size() - 4);
+		auto TemplateVariable = MatchString.midRef(2, MatchString.size() - 4);
 #else
 		auto TemplateVariable = QStringView(MatchString).sliced(2, MatchString.size() - 4);
 #endif
