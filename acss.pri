@@ -1,12 +1,15 @@
 
 CONFIG(debug, debug|release){
-    win32 {
+    win32-g++ {
     	versionAtLeast(QT_VERSION, 5.15.0) {
-    		LIBS += -lqtadvancedcss
+                LIBS += -lqtadvancedcss
     	}
     	else {
-    		LIBS += -lqtadvancedcssd
+                LIBS += -lqtadvancedcssd
     	}
+    }
+    else:msvc {
+        LIBS += -lqtadvancedcssd
     }
     else:mac {
         LIBS += -lqtadvancedcss_debug

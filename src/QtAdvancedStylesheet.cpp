@@ -48,6 +48,7 @@
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QSet>
+#include <QStringView>
 
 
 namespace acss
@@ -404,12 +405,16 @@ void QtAdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 		QString ValueString;
 		QString MatchString = match.captured();
 		// Use only the value inside of the brackets {{ }} without the brackets
-		auto TemplateVariable = MatchString.midRef(2, MatchString.size() - 4);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+		auto TemplateVariable = QStringView(MatchString).mid(2, MatchString.size() - 4);
+#else
+		auto TemplateVariable = QStringView(MatchString).sliced(2, MatchString.size() - 4);
+#endif
 		bool HasOpacity = TemplateVariable.endsWith(')');
 
 		if (HasOpacity)
 		{
-			auto Values = TemplateVariable.split("|");
+			auto Values = TemplateVariable.split(QChar('|'));
 			ValueString = _this->themeVariableValue(Values[0].toString());
 			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
 			bool Ok;
@@ -525,7 +530,7 @@ bool QtAdvancedStylesheetPrivate::parseVariablesFromXml(
 		if (s.name() != TagName)
 		{
 			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme "
-				"file - expected tag <" + TagName + "> instead of " + s.name());
+                "file - expected tag <" + TagName + "> instead of " + s.name().toString());
 			return false;
 		}
 		auto Name = s.attributes().value("name");
@@ -559,10 +564,10 @@ bool QtAdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 	ThemeFile.open(QIODevice::ReadOnly);
 	QXmlStreamReader s(&ThemeFile);
 	s.readNextStartElement();
-	if (s.name() != "resources")
+    if (s.name() != QLatin1String("resources"))
 	{
 		setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
-			"expected tag <resources> instead of " + s.name());
+            "expected tag <resources> instead of " + s.name().toString());
 		return false;
 	}
 
