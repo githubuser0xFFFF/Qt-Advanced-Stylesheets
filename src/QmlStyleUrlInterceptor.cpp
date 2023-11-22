@@ -30,6 +30,7 @@
 #include "QmlStyleUrlInterceptor.h"
 
 #include <QDebug>
+#include <QUrl>
 
 #include "QtAdvancedStylesheet.h"
 

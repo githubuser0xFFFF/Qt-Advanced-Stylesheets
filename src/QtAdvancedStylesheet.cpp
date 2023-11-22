@@ -48,7 +48,6 @@
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QSet>
-#include <QStringView>
 
 
 namespace acss
@@ -387,7 +386,7 @@ QString QtAdvancedStylesheetPrivate::rgbaColor(const QString& RgbColor, float Op
 {
 	int Alpha = 255 * Opacity;
 	auto RgbaColor = RgbColor;
-	RgbaColor.insert(1, QString::number(Alpha, 16));
+	RgbaColor.insert(1, QString("%1").arg(Alpha, 2, 16, QChar('0')));
 	return RgbaColor;
 }
 
@@ -405,17 +404,13 @@ void QtAdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 		QString ValueString;
 		QString MatchString = match.captured();
 		// Use only the value inside of the brackets {{ }} without the brackets
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-		auto TemplateVariable = MatchString.midRef(2, MatchString.size() - 4);
-#else
-		auto TemplateVariable = QStringView(MatchString).sliced(2, MatchString.size() - 4);
-#endif
+                auto TemplateVariable = MatchString.mid(2, MatchString.size() - 4);
 		bool HasOpacity = TemplateVariable.endsWith(')');
 
 		if (HasOpacity)
 		{
-			auto Values = TemplateVariable.split(QChar('|'));
-			ValueString = _this->themeVariableValue(Values[0].toString());
+			auto Values = TemplateVariable.split("|");
+                        ValueString = _this->themeVariableValue(Values[0]);
 			auto OpacityStr = Values[1].mid(OpacityStrSize, Values[1].size() - OpacityStrSize - 1);
 			bool Ok;
 			auto Opacity = OpacityStr.toFloat(&Ok);
@@ -423,7 +418,7 @@ void QtAdvancedStylesheetPrivate::replaceStylesheetVariables(QString& Content)
 		}
 		else
 		{
-			ValueString = _this->themeVariableValue(TemplateVariable.toString());
+                        ValueString = _this->themeVariableValue(TemplateVariable);
 		}
 
 		Content.replace(index, MatchString.size(), ValueString);
@@ -530,7 +525,7 @@ bool QtAdvancedStylesheetPrivate::parseVariablesFromXml(
 		if (s.name() != TagName)
 		{
 			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme "
-                "file - expected tag <" + TagName + "> instead of " + s.name().toString());
+                                "file - expected tag <" + TagName + "> instead of " + s.name().toString());
 			return false;
 		}
 		auto Name = s.attributes().value("name");
@@ -563,11 +558,11 @@ bool QtAdvancedStylesheetPrivate::parseThemeFile(const QString& Theme)
 	QFile ThemeFile(ThemeFileName);
 	ThemeFile.open(QIODevice::ReadOnly);
 	QXmlStreamReader s(&ThemeFile);
-	s.readNextStartElement();
-    if (s.name() != QLatin1String("resources"))
+        s.readNextStartElement();
+        if (s.name() != QString("resources"))
 	{
 		setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
-            "expected tag <resources> instead of " + s.name().toString());
+                        "expected tag <resources> instead of " + s.name().toString());
 		return false;
 	}
 
