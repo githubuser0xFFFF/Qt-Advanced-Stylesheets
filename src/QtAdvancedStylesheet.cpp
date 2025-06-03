@@ -528,7 +528,7 @@ bool QtAdvancedStylesheetPrivate::parseVariablesFromXml(
                                 "file - expected tag <" + TagName + "> instead of " + s.name().toString());
 			return false;
 		}
-		auto Name = s.attributes().value("name");
+		auto Name = s.attributes().value("name").toString();
 		if (Name.isEmpty())
 		{
 			setError(QtAdvancedStylesheet::ThemeXmlError, "Malformed theme file - "
@@ -544,7 +544,7 @@ bool QtAdvancedStylesheetPrivate::parseVariablesFromXml(
 			return false;
 		}
 
-		Variables.insert(Name.toString(), Value);
+		Variables.insert(Name, Value);
 	}
 
 	return true;
