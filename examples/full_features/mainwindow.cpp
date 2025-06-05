@@ -125,8 +125,13 @@ void MainWindowPrivate::setSomeIcons()
 
 void MainWindowPrivate::setupQuickWidget()
 {
+#if (QT_VERSION > QT_VERSION_CHECK(6,0,0))
+    ui.quickWidget->engine()->addUrlInterceptor(
+        new acss::CQmlStyleUrlInterceptor(AdvancedStyleSheet));
+#else
     ui.quickWidget->engine()->setUrlInterceptor(
         new acss::CQmlStyleUrlInterceptor(AdvancedStyleSheet));
+#endif
     ui.quickWidget->setStyleSheet(AdvancedStyleSheet->styleSheet());
     ui.quickWidget->setSource(QUrl("qrc:/full_features/qml/simple_demo.qml"));
     ui.quickWidget->setAttribute(Qt::WA_AlwaysStackOnTop);
