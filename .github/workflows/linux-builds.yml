@@ -13,7 +13,7 @@ jobs:
       id: cache-qt-6-4
       uses: actions/cache@v3
       with:
-        path: ../Qt/6.4.2
+        path: Qt/6.4.2
         key: ${{ runner.os }}-QtCache-Qt6-4
 
     - name: Install Qt
@@ -27,6 +27,7 @@ jobs:
         setup-python: true
         tools: ''
         tools-only: false
+        dir: 'Qt'  # This ensures Qt is installed in ./Qt
 
     - name: Ubuntu and Qt version
       run: |
