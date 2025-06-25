@@ -1,25 +1,39 @@
 name: linux-builds
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
-
-    runs-on: ${{ matrix.os }}
-    
+  build_ubuntu_2204:
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v1
-    - name: install qt
+    - uses: actions/checkout@v2
+    - name: Cache Qt
+      id: cache-qt-6-4
+      uses: actions/cache@v3
+      with:
+        path: ../Qt/6.4.2
+        key: ${{ runner.os }}-QtCache-Qt6-4
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: '6.4.2'
+        host: 'linux'
+        target: 'desktop'
+        install-deps: true
+        cached: ${{ steps.cache-qt-6-4.outputs.cache-hit }}
+        setup-python: true
+        tools: ''
+        tools-only: false
+
+    - name: Ubuntu and Qt version
       run: |
-        sudo apt-get update --fix-missing
-        sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
-        sudo apt-get install qtbase5-private-dev
-        sudo apt-get install qtdeclarative5-dev
-        sudo apt-get install libqt5svg5-dev
+        cat /etc/issue
+        echo number of processors: $(nproc)
+        qmake -v
     - name: qmake
       run: qmake
     - name: make
-      run: make -j4
+      run: make -j$(nproc)
