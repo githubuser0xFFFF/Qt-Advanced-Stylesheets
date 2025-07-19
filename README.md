@@ -4,10 +4,13 @@
 
 ------------------
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/githubuser0xFFFF/Qt-Advanced-Stylesheets)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/releases/latest)
+[![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
+[![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
+[![GitHub contributors](https://img.shields.io/github/contributors/githubuser0xFFFF/Qt-Advanced-Stylesheets?color=ffdf00)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/graphs/contributors)
+
 Advanced Stylesheets with Theming Support for Qt.
 
-- [![Build status](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/workflows/linux-builds/badge.svg)](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/actions?query=workflow%3Alinux-builds)
-- [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](gnu-lgpl-v2.1.md)
 - Original Repository: https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets
 - [What's new](https://github.com/githubuser0xFFFF/Qt-Advanced-Stylesheets/releases/latest)
 - [Documentation](doc/user-guide.md)
@@ -23,7 +26,7 @@ The main features are:
 
 - runtime switching of CSS colors
 - runtime color switching of CSS SVG icons / resources
-- runtime color switching of icons loaded via `loadThemeAwareSvgIcon()`
+- runtime color switching of theme aware icons loaded via `loadThemeAwareSvgIcon()`
 - runtime switching of QPalette colors
 - definition of CSS styles that switch the complete application design
 - definition of XML color themes that allow switching of theme colors (dark / light)
@@ -64,6 +67,7 @@ QComboBox::drop-down {
 - [Build](#build)
 - [Getting started](#getting-started)
 - [Run examples](#run-examples)
+- [Python Support](#python-support)
 - [Future Plans](#future-plans)
 - [License information](#license-information)
 - [Credits](#credits)
@@ -123,6 +127,22 @@ The `full_features` example shows a window with almost all widgets to test all
 themes and create new ones.
 
 ![theme](doc/theme.gif)
+
+## Python Support
+
+![Python Logo](doc/python_logo.png)
+
+There is a Python implementation for this library available [qtass-pyside6 - Qt Advanced Stylesheets for PySide6](https://pypi.org/project/qtass-pyside6/).
+
+The library can be installed via pip:
+
+```shell
+pip install qtass-pyside6
+```
+
+The source code is available on GitHub:
+
+https://github.com/githubuser0xFFFF/qtass-pyside6
 
 ## Future Plans
 
